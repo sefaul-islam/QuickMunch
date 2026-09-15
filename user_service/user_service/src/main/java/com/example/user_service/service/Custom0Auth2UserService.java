@@ -1,31 +1,41 @@
 package com.example.user_service.service;
 
+import com.example.user_service.entity.Role;
 import com.example.user_service.entity.User;
+import com.example.user_service.enums.RoleName;
+import com.example.user_service.repos.RoleRepository;
 import com.example.user_service.repos.UserRepository;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
 
 @Service
-public class Custom0Auth2UserService extends DefaultOAuth2UserService {
+public class Custom0Auth2UserService extends OidcUserService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
-    public Custom0Auth2UserService(UserRepository userRepository) {
+    public Custom0Auth2UserService(UserRepository userRepository,
+                                   RoleRepository roleRepository) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
 
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest)
+    @Transactional
+    public OidcUser loadUser(OidcUserRequest userRequest)
             throws OAuth2AuthenticationException {
 
-        OAuth2User googleUser = super.loadUser(userRequest);
+        OidcUser oidcUser = super.loadUser(userRequest);
 
-        String googleId = googleUser.getAttribute("sub");
-        String email = googleUser.getAttribute("email");
-        String name = googleUser.getAttribute("name");
-        String picture = googleUser.getAttribute("picture");
+        String googleId = oidcUser.getSubject();
+        String email = oidcUser.getEmail();
+        String name = oidcUser.getFullName();
+        String picture = oidcUser.getPicture();
 
         String firstName = null;
         String lastName = null;
@@ -38,9 +48,17 @@ public class Custom0Auth2UserService extends DefaultOAuth2UserService {
         String fName = firstName;
         String lName = lastName;
 
-        User user = userRepository
+        userRepository
                 .findByGoogleId(googleId)
                 .orElseGet(() -> {
+
+                    Role customerRole = roleRepository
+                            .findByName(RoleName.ROLE_CUSTOMER)
+                            .orElseGet(() -> {
+                                Role newRole = new Role();
+                                newRole.setName(RoleName.ROLE_CUSTOMER);
+                                return roleRepository.save(newRole);
+                            });
 
                     User newUser = new User();
 
@@ -49,10 +67,12 @@ public class Custom0Auth2UserService extends DefaultOAuth2UserService {
                     newUser.setFirstName(fName);
                     newUser.setLastName(lName);
                     newUser.setProfilePictureUrl(picture);
+                    newUser.setRoles(Set.of(customerRole));
 
                     return userRepository.save(newUser);
                 });
 
-        return googleUser;
+        return oidcUser;
     }
 }
+

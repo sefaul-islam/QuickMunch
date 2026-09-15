@@ -30,8 +30,9 @@ public class SecurityConfig {
 
                 .oauth2Login(oauth -> oauth
                         .userInfoEndpoint(userInfo -> userInfo
-                                .userService(custom0Auth2UserService)
+                                .oidcUserService(custom0Auth2UserService)
                         )
+                        .defaultSuccessUrl("/api/users/login", true)
                 );
 
         return http.build();
