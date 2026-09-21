@@ -23,6 +23,7 @@ public class SecurityConfig {
             HttpSecurity http) throws Exception {
 
         http
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login/**").permitAll()
                         .anyRequest().authenticated()

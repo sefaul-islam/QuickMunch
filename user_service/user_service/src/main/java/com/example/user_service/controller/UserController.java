@@ -1,24 +1,26 @@
 package com.example.user_service.controller;
 
-import com.example.user_service.entity.User;
-import com.example.user_service.repos.UserRepository;
-import lombok.RequiredArgsConstructor;
+import com.example.user_service.dto.UpdateUserRequestDTO;
+import com.example.user_service.dto.UserProfileResponseDTO;
+import com.example.user_service.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping("/login")
     public ResponseEntity<Map<String, Object>> login(
@@ -37,9 +39,33 @@ public class UserController {
         return ResponseEntity.ok(userInfo);
     }
 
-    @GetMapping
-    public ResponseEntity<List<User>> getUsers() {
-        return ResponseEntity.ok(userRepository.findAll());
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserProfileResponseDTO> getUser(
+            @PathVariable("userId") Long userId) {
+
+        UserProfileResponseDTO user = userService.getUserById(userId);
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<UserProfileResponseDTO> updateUser(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody UpdateUserRequestDTO dto,
+            @AuthenticationPrincipal OidcUser oidcUser) {
+
+        String authenticatedEmail = oidcUser.getEmail();
+        UserProfileResponseDTO updated = userService.updateUser(
+                userId, dto, authenticatedEmail);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable("userId") Long userId,
+            @AuthenticationPrincipal OidcUser oidcUser) {
+
+        String authenticatedEmail = oidcUser.getEmail();
+        userService.deleteUser(userId, authenticatedEmail);
+        return ResponseEntity.noContent().build();
     }
 }
-
