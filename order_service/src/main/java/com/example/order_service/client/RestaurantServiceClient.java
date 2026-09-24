@@ -1,5 +1,6 @@
 package com.example.order_service.client;
 
+import com.example.order_service.exception.UserNotFoundException;
 import lombok.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,7 @@ public class RestaurantServiceClient {
     }
 
     public void getRestaurant(Long restaurantId){ //TODO need to create the restaurantdto
-        return restClient.get()
+         restClient.get()
                 .uri("/api/restaurants/{id}",restaurantId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,((request, response) -> {
