@@ -19,7 +19,7 @@ public class RestaurantServiceClient {
                 .build();
     }
 
-    public void getRestaurant(Long restaurantId){ //TODO need to create the restaurantdto
+    public void getRestaurant(Long restaurantId){
          restClient.get()
                 .uri("/api/restaurants/{id}",restaurantId)
                 .retrieve()
