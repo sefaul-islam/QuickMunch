@@ -21,9 +21,5 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @PostMapping
-    public ResponseEntity<OrderConfirmationResponse>createOrder(@RequestBody CreateOrderDTO createOrderDTO){
 
-
-    }
 }
