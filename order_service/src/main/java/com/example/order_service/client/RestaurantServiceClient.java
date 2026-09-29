@@ -1,7 +1,7 @@
 package com.example.order_service.client;
 
 import com.example.order_service.exception.UserNotFoundException;
-import lombok.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;

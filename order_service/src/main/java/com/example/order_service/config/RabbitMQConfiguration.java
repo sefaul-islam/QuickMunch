@@ -1,12 +1,14 @@
 package com.example.order_service.config;
 
-import lombok.Value;
+
 import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 public class RabbitMQConfiguration {
@@ -14,11 +16,7 @@ public class RabbitMQConfiguration {
     @Value("${rabbitmq.exchange.order}")
     private String orderExchange;
 
-    @Value("${rabbitmq.queue.order-created}")
-    private String orderCreatedQueue;
 
-    @Value("${rabbitmq.routing-key.order-created}")
-    private String orderCreatedRoutingKey;
 
     @Bean
     public DirectExchange orderExchange(){
@@ -26,7 +24,10 @@ public class RabbitMQConfiguration {
     }
 
     @Bean
-    public MessageConverter jsonMessageConverter(ObjectMapper obj){
-        return new Jackson2JsonMessageConverter(obj);
+    public MessageConverter jsonMessageConverter(){
+        JsonMapper jsonMappeer = JsonMapper.builder()
+                .findAndAddModules()
+                .build();
+        return new JacksonJsonMessageConverter(jsonMappeer);
     }
 }
