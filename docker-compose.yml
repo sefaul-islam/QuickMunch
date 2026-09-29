@@ -1,0 +1,163 @@
+services:
+
+  # ──────────────────────────── Infrastructure ────────────────────────────
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: quickmunch-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quickmunch-network
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: quickmunch-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quickmunch-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: quickmunch-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
+    networks:
+      - quickmunch-network
+
+  # ──────────────────────────── Application Services ────────────────────────────
+
+  user-service:
+    build:
+      context: ./user_service
+      dockerfile: Dockerfile
+    container_name: quickmunch-user-service
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: quickmunchdb
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: f4a8b2c9d1e6f3a7b5c0d2e8f1a4b7c9d3e6f0a2b5c8d1e4f7a0b3c6d9e2f5
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-placeholder}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-placeholder}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - quickmunch-network
+
+  restaurant-service:
+    build:
+      context: ./restaurant_service
+      dockerfile: Dockerfile
+    container_name: quickmunch-restaurant-service
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: quickmunch_restaurants
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: f4a8b2c9d1e6f3a7b5c0d2e8f1a4b7c9d3e6f0a2b5c8d1e4f7a0b3c6d9e2f5
+      USER_SERVICE_URL: http://user-service:8081
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+    networks:
+      - quickmunch-network
+
+  order-service:
+    build:
+      context: ./order_service
+      dockerfile: Dockerfile
+    container_name: quickmunch-order-service
+    ports:
+      - "8083:8083"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: quickmunch_orders
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: f4a8b2c9d1e6f3a7b5c0d2e8f1a4b7c9d3e6f0a2b5c8d1e4f7a0b3c6d9e2f5
+      USER_SERVICE_URL: http://user-service:8081
+      RESTAURANT_SERVICE_URL: http://restaurant-service:8082
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      restaurant-service:
+        condition: service_started
+    networks:
+      - quickmunch-network
+
+  notification-service:
+    build:
+      context: ./notification_service
+      dockerfile: Dockerfile
+    container_name: quickmunch-notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - quickmunch-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  quickmunch-network:
+    driver: bridge

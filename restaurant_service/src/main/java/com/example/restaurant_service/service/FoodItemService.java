@@ -30,6 +30,7 @@ public class FoodItemService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "restaurant_foods", key = "#restaurantId")
     public FoodItemResponse createFoodItem(Long restaurantId,
                                             CreateFoodItemRequest request,
                                             Long authenticatedUserId) {
@@ -44,6 +45,7 @@ public class FoodItemService {
     }
 
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(value = "restaurant_foods", key = "#restaurantId")
     public List<FoodItemResponse> getFoodItems(Long restaurantId) {
         restaurantService.findRestaurantOrThrow(restaurantId);
 
@@ -53,6 +55,7 @@ public class FoodItemService {
     }
 
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(value = "restaurant_food", key = "#restaurantId + '_' + #foodId")
     public FoodItemResponse getFoodItem(Long restaurantId, Long foodId) {
         restaurantService.findRestaurantOrThrow(restaurantId);
 
@@ -61,6 +64,10 @@ public class FoodItemService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.Caching(evict = {
+        @org.springframework.cache.annotation.CacheEvict(value = "restaurant_foods", key = "#restaurantId"),
+        @org.springframework.cache.annotation.CacheEvict(value = "restaurant_food", key = "#restaurantId + '_' + #foodId")
+    })
     public FoodItemResponse updateFoodItem(Long restaurantId, Long foodId,
                                             UpdateFoodItemRequest request,
                                             Long authenticatedUserId) {
@@ -82,6 +89,10 @@ public class FoodItemService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.Caching(evict = {
+        @org.springframework.cache.annotation.CacheEvict(value = "restaurant_foods", key = "#restaurantId"),
+        @org.springframework.cache.annotation.CacheEvict(value = "restaurant_food", key = "#restaurantId + '_' + #foodId")
+    })
     public void deleteFoodItem(Long restaurantId, Long foodId,
                                 Long authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
@@ -92,6 +103,10 @@ public class FoodItemService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.Caching(evict = {
+        @org.springframework.cache.annotation.CacheEvict(value = "restaurant_foods", key = "#restaurantId"),
+        @org.springframework.cache.annotation.CacheEvict(value = "restaurant_food", key = "#restaurantId + '_' + #foodId")
+    })
     public FoodItemResponse updateAvailability(Long restaurantId, Long foodId,
                                                 Boolean isAvailable,
                                                 Long authenticatedUserId) {

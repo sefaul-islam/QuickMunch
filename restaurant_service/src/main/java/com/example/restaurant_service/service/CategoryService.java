@@ -32,6 +32,7 @@ public class CategoryService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "restaurant_categories", key = "#restaurantId")
     public CategoryResponse createCategory(Long restaurantId,
                                             CreateCategoryRequest request,
                                             Long authenticatedUserId) {
@@ -49,6 +50,7 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(value = "restaurant_categories", key = "#restaurantId")
     public List<CategoryResponse> getCategories(Long restaurantId) {
         restaurantService.findRestaurantOrThrow(restaurantId);
 
@@ -58,6 +60,7 @@ public class CategoryService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "restaurant_categories", key = "#restaurantId")
     public CategoryResponse updateCategory(Long restaurantId, Long categoryId,
                                             UpdateCategoryRequest request,
                                             Long authenticatedUserId) {
@@ -82,6 +85,7 @@ public class CategoryService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "restaurant_categories", key = "#restaurantId")
     public void deleteCategory(Long restaurantId, Long categoryId,
                                 Long authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);

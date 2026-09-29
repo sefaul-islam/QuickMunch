@@ -27,23 +27,27 @@ public class AddressController {
             @Valid @RequestBody AddressRequestDTO requestDTO,
             Authentication authentication) {
         String authenticatedEmail = (String) authentication.getCredentials();
-        AddressResponseDTO address = addressService.addAddress(
+        AddressResponseDTO address = addressService.createAddress(
                 userId, requestDTO, authenticatedEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(address);
     }
 
     @GetMapping
     public ResponseEntity<List<AddressResponseDTO>> getAddresses(
-            @PathVariable("userId") Long userId) {
-        List<AddressResponseDTO> addresses = addressService.getAddressesByUserId(userId);
+            @PathVariable("userId") Long userId,
+            Authentication authentication) {
+        String authenticatedEmail = (String) authentication.getCredentials();
+        List<AddressResponseDTO> addresses = addressService.getAddressesByUserId(userId, authenticatedEmail);
         return ResponseEntity.ok(addresses);
     }
 
     @GetMapping("/{addressId}")
     public ResponseEntity<AddressResponseDTO> getAddress(
             @PathVariable("userId") Long userId,
-            @PathVariable("addressId") Long addressId) {
-        AddressResponseDTO address = addressService.getAddressById(userId, addressId);
+            @PathVariable("addressId") Long addressId,
+            Authentication authentication) {
+        String authenticatedEmail = (String) authentication.getCredentials();
+        AddressResponseDTO address = addressService.getAddress(userId, addressId, authenticatedEmail);
         return ResponseEntity.ok(address);
     }
 

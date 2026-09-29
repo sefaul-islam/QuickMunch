@@ -25,3 +25,10 @@ spring:
               - openid
               - profile
               - email
+
+jwt:
+  secret: test-secret-key-for-jwt-testing-purposes-only-must-be-long-enough
+  expiration: 86400000
+
+server:
+  port: 8081

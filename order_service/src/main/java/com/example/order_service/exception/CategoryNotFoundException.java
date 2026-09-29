@@ -1,4 +1,7 @@
 package com.example.order_service.exception;
 
-public class CategoryNotFoundException extends Throwable {
+public class CategoryNotFoundException extends RuntimeException {
+    public CategoryNotFoundException(Long id) {
+        super("Category not found with id: " + id);
+    }
 }

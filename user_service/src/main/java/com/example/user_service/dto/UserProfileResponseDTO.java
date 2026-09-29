@@ -5,8 +5,8 @@ import java.util.Set;
 
 public record UserProfileResponseDTO(
         Long id,
-        String firstname,
-        String lastname,
+        String firstName,
+        String lastName,
         String email,
         String phoneNumber,
         List<AddressResponseDTO> addresses,

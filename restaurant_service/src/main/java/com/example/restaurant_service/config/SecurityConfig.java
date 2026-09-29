@@ -30,9 +30,14 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/actuator/health",
+                                "/actuator/health"
+                        ).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET,
                                 "/api/restaurants",
-                                "/api/restaurants/{restaurantId}"
+                                "/api/restaurants/{restaurantId}",
+                                "/api/restaurants/{restaurantId}/categories",
+                                "/api/restaurants/{restaurantId}/foods",
+                                "/api/restaurants/{restaurantId}/foods/{foodId}"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

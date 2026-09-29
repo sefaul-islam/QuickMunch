@@ -16,7 +16,6 @@ class UserTest {
                 .email("john@example.com")
                 .password("secret123")
                 .phoneNumber("01712345678")
-                .address("Dhaka")
                 .googleId("google-123")
                 .profilePictureUrl("https://example.com/pic.jpg")
                 .build();
@@ -26,7 +25,6 @@ class UserTest {
         assertEquals("john@example.com", user.getEmail());
         assertEquals("secret123", user.getPassword());
         assertEquals("01712345678", user.getPhoneNumber());
-        assertEquals("Dhaka", user.getAddress());
         assertEquals("google-123", user.getGoogleId());
         assertEquals("https://example.com/pic.jpg", user.getProfilePictureUrl());
         assertTrue(user.getIsActive()); // default
@@ -63,7 +61,6 @@ class UserTest {
         assertNull(user.getLastName());
         assertNull(user.getPassword());
         assertNull(user.getPhoneNumber());
-        assertNull(user.getAddress());
         assertNull(user.getGoogleId());
         assertNull(user.getProfilePictureUrl());
         assertTrue(user.getIsActive());

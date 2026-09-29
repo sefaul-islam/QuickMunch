@@ -40,6 +40,7 @@ public class RestaurantService {
     }
 
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(value = "restaurants", key = "#id")
     public RestaurantResponse getRestaurant(Long id) {
         Restaurant restaurant = findRestaurantOrThrow(id);
         return RestaurantMapper.toResponse(restaurant);
@@ -60,6 +61,7 @@ public class RestaurantService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "restaurants", key = "#id")
     public RestaurantResponse updateRestaurant(Long id,
                                                 UpdateRestaurantRequest request,
                                                 Long authenticatedUserId) {
@@ -77,6 +79,7 @@ public class RestaurantService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "restaurants", key = "#id")
     public void deleteRestaurant(Long id, Long authenticatedUserId) {
         Restaurant restaurant = findRestaurantOrThrow(id);
         verifyOwnership(restaurant, authenticatedUserId);
@@ -92,6 +95,7 @@ public class RestaurantService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "restaurants", key = "#id")
     public RestaurantResponse updateStatus(Long id, Boolean isOpen,
                                             Long authenticatedUserId) {
         Restaurant restaurant = findRestaurantOrThrow(id);
