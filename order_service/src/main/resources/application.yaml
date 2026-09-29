@@ -26,10 +26,7 @@ rabbitmq:
     order: order-created
   routing-key:
     order-created: order.created
-    order-status-updated: order.status.updob);
-  }
-}
-  ated
+    order-status-updated: order.status.updated
     order-cancelled: order.cancelled
 
 user-service:
