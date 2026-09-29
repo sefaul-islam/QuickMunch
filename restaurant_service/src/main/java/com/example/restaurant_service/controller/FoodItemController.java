@@ -7,6 +7,7 @@ import com.example.restaurant_service.service.FoodItemService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,9 +26,11 @@ public class FoodItemController {
     @PostMapping
     public ResponseEntity<FoodItemResponse> createFoodItem(
             @PathVariable Long restaurantId,
-            @Valid @RequestBody CreateFoodItemRequest request) {
+            @Valid @RequestBody CreateFoodItemRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
         FoodItemResponse response = foodItemService.createFoodItem(
-                restaurantId, request);
+                restaurantId, request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -49,16 +52,21 @@ public class FoodItemController {
     public ResponseEntity<FoodItemResponse> updateFoodItem(
             @PathVariable Long restaurantId,
             @PathVariable Long foodId,
-            @Valid @RequestBody UpdateFoodItemRequest request) {
+            @Valid @RequestBody UpdateFoodItemRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
         return ResponseEntity.ok(
-                foodItemService.updateFoodItem(restaurantId, foodId, request));
+                foodItemService.updateFoodItem(
+                        restaurantId, foodId, request, userId));
     }
 
     @DeleteMapping("/{foodId}")
     public ResponseEntity<Void> deleteFoodItem(
             @PathVariable Long restaurantId,
-            @PathVariable Long foodId) {
-        foodItemService.deleteFoodItem(restaurantId, foodId);
+            @PathVariable Long foodId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        foodItemService.deleteFoodItem(restaurantId, foodId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -66,13 +74,15 @@ public class FoodItemController {
     public ResponseEntity<FoodItemResponse> updateAvailability(
             @PathVariable Long restaurantId,
             @PathVariable Long foodId,
-            @RequestBody Map<String, Boolean> request) {
+            @RequestBody Map<String, Boolean> request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
         Boolean isAvailable = request.get("isAvailable");
         if (isAvailable == null) {
             throw new IllegalArgumentException("'isAvailable' field is required");
         }
         return ResponseEntity.ok(
-                foodItemService.updateAvailability(restaurantId, foodId, isAvailable));
+                foodItemService.updateAvailability(
+                        restaurantId, foodId, isAvailable, userId));
     }
 }
-

@@ -7,6 +7,7 @@ import com.example.restaurant_service.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,9 +25,11 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<CategoryResponse> createCategory(
             @PathVariable Long restaurantId,
-            @Valid @RequestBody CreateCategoryRequest request) {
+            @Valid @RequestBody CreateCategoryRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
         CategoryResponse response = categoryService.createCategory(
-                restaurantId, request);
+                restaurantId, request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -40,17 +43,21 @@ public class CategoryController {
     public ResponseEntity<CategoryResponse> updateCategory(
             @PathVariable Long restaurantId,
             @PathVariable Long categoryId,
-            @Valid @RequestBody UpdateCategoryRequest request) {
+            @Valid @RequestBody UpdateCategoryRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
         return ResponseEntity.ok(
-                categoryService.updateCategory(restaurantId, categoryId, request));
+                categoryService.updateCategory(
+                        restaurantId, categoryId, request, userId));
     }
 
     @DeleteMapping("/{categoryId}")
     public ResponseEntity<Void> deleteCategory(
             @PathVariable Long restaurantId,
-            @PathVariable Long categoryId) {
-        categoryService.deleteCategory(restaurantId, categoryId);
+            @PathVariable Long categoryId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        categoryService.deleteCategory(restaurantId, categoryId, userId);
         return ResponseEntity.noContent().build();
     }
 }
-

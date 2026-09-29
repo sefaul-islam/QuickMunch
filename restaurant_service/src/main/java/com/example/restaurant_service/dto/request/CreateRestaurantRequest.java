@@ -1,13 +1,9 @@
 package com.example.restaurant_service.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateRestaurantRequest(
-
-        @NotNull(message = "Owner ID is required")
-        Long ownerId,
 
         @NotBlank(message = "Name is required")
         @Size(max = 100, message = "Name must not exceed 100 characters")
@@ -26,4 +22,3 @@ public record CreateRestaurantRequest(
         String imageUrl
 ) {
 }
-

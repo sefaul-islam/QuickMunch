@@ -3,10 +3,12 @@ package com.example.user_service.utils;
 import com.example.user_service.auth.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.Value;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +19,7 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:DEFAULT_SECRET}")
+    @Value("${jwt.secret}")
     private String secret;
     @Value("${jwt.expiration:86400000}")
     private long jwtExpirationInMs;
@@ -53,14 +55,15 @@ public class JwtUtil {
         }
     }
     public  boolean isTokenValid(String token){
-        return !isExpired(token);
+        try{
+            getClaims(token);
+            return true;
+        }catch(JwtException jwt){
+            return false;
+        }
     }
 
-    private   boolean isExpired(String token) {
-        return getClaims(token)
-                .getExpiration()
-                .before(new Date());
-    }
+
 
     private SecretKey getSignInKey(){
 

@@ -1,8 +1,6 @@
-package com.example.user_service.config;
+package com.example.order_service.config;
 
-import com.example.user_service.security.JwtAuthenticationFilter;
-import com.example.user_service.security.OAuth2LoginSuccessHandler;
-import com.example.user_service.service.Custom0Auth2UserService;
+import com.example.order_service.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,17 +13,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final Custom0Auth2UserService custom0Auth2UserService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
-    public SecurityConfig(
-            Custom0Auth2UserService custom0Auth2UserService,
-            JwtAuthenticationFilter jwtAuthenticationFilter,
-            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) {
-        this.custom0Auth2UserService = custom0Auth2UserService;
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
     }
 
     @Bean
@@ -38,19 +29,8 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/",
-                                "/login/**",
-                                "/oauth2/**",
-                                "/actuator/health"
-                        ).permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated()
-                )
-                .oauth2Login(oauth -> oauth
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .oidcUserService(custom0Auth2UserService)
-                        )
-                        .successHandler(oAuth2LoginSuccessHandler)
                 )
                 .addFilterBefore(jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class);
@@ -58,3 +38,4 @@ public class SecurityConfig {
         return http.build();
     }
 }
+

@@ -29,11 +29,12 @@ public class FoodItemService {
         this.categoryService = categoryService;
     }
 
-    // TASK 20 — Create Food Item
     @Transactional
     public FoodItemResponse createFoodItem(Long restaurantId,
-                                            CreateFoodItemRequest request) {
+                                            CreateFoodItemRequest request,
+                                            Long authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
+        restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
         Category category = resolveCategory(request.categoryId(), restaurantId);
 
@@ -42,7 +43,6 @@ public class FoodItemService {
         return FoodItemMapper.toResponse(saved);
     }
 
-    // TASK 21 — Get Restaurant Food Items
     @Transactional(readOnly = true)
     public List<FoodItemResponse> getFoodItems(Long restaurantId) {
         restaurantService.findRestaurantOrThrow(restaurantId);
@@ -52,7 +52,6 @@ public class FoodItemService {
                 .toList();
     }
 
-    // TASK 22 — Get Single Food Item
     @Transactional(readOnly = true)
     public FoodItemResponse getFoodItem(Long restaurantId, Long foodId) {
         restaurantService.findRestaurantOrThrow(restaurantId);
@@ -61,11 +60,12 @@ public class FoodItemService {
         return FoodItemMapper.toResponse(foodItem);
     }
 
-    // TASK 23 — Update Food Item
     @Transactional
     public FoodItemResponse updateFoodItem(Long restaurantId, Long foodId,
-                                            UpdateFoodItemRequest request) {
-        restaurantService.findRestaurantOrThrow(restaurantId);
+                                            UpdateFoodItemRequest request,
+                                            Long authenticatedUserId) {
+        Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
+        restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
         FoodItem foodItem = findFoodItemOrThrow(foodId, restaurantId);
 
@@ -81,20 +81,22 @@ public class FoodItemService {
         return FoodItemMapper.toResponse(saved);
     }
 
-    // TASK 24 — Delete Food Item
     @Transactional
-    public void deleteFoodItem(Long restaurantId, Long foodId) {
-        restaurantService.findRestaurantOrThrow(restaurantId);
+    public void deleteFoodItem(Long restaurantId, Long foodId,
+                                Long authenticatedUserId) {
+        Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
+        restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
         FoodItem foodItem = findFoodItemOrThrow(foodId, restaurantId);
         foodItemRepository.delete(foodItem);
     }
 
-    // TASK 25 — Food Availability
     @Transactional
     public FoodItemResponse updateAvailability(Long restaurantId, Long foodId,
-                                                Boolean isAvailable) {
-        restaurantService.findRestaurantOrThrow(restaurantId);
+                                                Boolean isAvailable,
+                                                Long authenticatedUserId) {
+        Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
+        restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
         FoodItem foodItem = findFoodItemOrThrow(foodId, restaurantId);
         foodItem.setIsAvailable(isAvailable);
@@ -103,17 +105,11 @@ public class FoodItemService {
         return FoodItemMapper.toResponse(saved);
     }
 
-    // ── Helpers ──────────────────────────────────────────────
-
     private FoodItem findFoodItemOrThrow(Long foodId, Long restaurantId) {
         return foodItemRepository.findByIdAndRestaurantId(foodId, restaurantId)
                 .orElseThrow(() -> new FoodItemNotFoundException(foodId));
     }
 
-    /**
-     * Resolves a category by ID, ensuring it belongs to the same restaurant.
-     * Returns null if categoryId is null (category is optional).
-     */
     private Category resolveCategory(Long categoryId, Long restaurantId) {
         if (categoryId == null) {
             return null;
@@ -121,4 +117,3 @@ public class FoodItemService {
         return categoryService.findCategoryByIdAndRestaurant(categoryId, restaurantId);
     }
 }
-

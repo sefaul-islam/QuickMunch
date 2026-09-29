@@ -9,9 +9,9 @@ public final class RestaurantMapper {
     private RestaurantMapper() {
     }
 
-    public static Restaurant toEntity(CreateRestaurantRequest request) {
+    public static Restaurant toEntity(CreateRestaurantRequest request, Long ownerId) {
         return Restaurant.builder()
-                .ownerId(request.ownerId())
+                .ownerId(ownerId)
                 .name(request.name())
                 .description(request.description())
                 .phoneNumber(request.phoneNumber())
@@ -36,4 +36,3 @@ public final class RestaurantMapper {
         );
     }
 }
-

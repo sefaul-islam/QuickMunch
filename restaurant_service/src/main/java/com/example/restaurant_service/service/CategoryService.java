@@ -31,11 +31,12 @@ public class CategoryService {
         this.restaurantService = restaurantService;
     }
 
-    // TASK 16 — Create Category
     @Transactional
     public CategoryResponse createCategory(Long restaurantId,
-                                            CreateCategoryRequest request) {
+                                            CreateCategoryRequest request,
+                                            Long authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
+        restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
         if (categoryRepository.existsByRestaurantIdAndNameIgnoreCase(
                 restaurantId, request.name())) {
@@ -47,7 +48,6 @@ public class CategoryService {
         return CategoryMapper.toResponse(saved);
     }
 
-    // TASK 17 — Get Restaurant Categories
     @Transactional(readOnly = true)
     public List<CategoryResponse> getCategories(Long restaurantId) {
         restaurantService.findRestaurantOrThrow(restaurantId);
@@ -57,17 +57,17 @@ public class CategoryService {
                 .toList();
     }
 
-    // TASK 18 — Update Category
     @Transactional
     public CategoryResponse updateCategory(Long restaurantId, Long categoryId,
-                                            UpdateCategoryRequest request) {
-        restaurantService.findRestaurantOrThrow(restaurantId);
+                                            UpdateCategoryRequest request,
+                                            Long authenticatedUserId) {
+        Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
+        restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
         Category category = categoryRepository
                 .findByIdAndRestaurantId(categoryId, restaurantId)
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId));
 
-        // Check duplicate name only if the name is actually changing
         if (!category.getName().equalsIgnoreCase(request.name())
                 && categoryRepository.existsByRestaurantIdAndNameIgnoreCase(
                         restaurantId, request.name())) {
@@ -81,10 +81,11 @@ public class CategoryService {
         return CategoryMapper.toResponse(saved);
     }
 
-    // TASK 19 — Delete Category
     @Transactional
-    public void deleteCategory(Long restaurantId, Long categoryId) {
-        restaurantService.findRestaurantOrThrow(restaurantId);
+    public void deleteCategory(Long restaurantId, Long categoryId,
+                                Long authenticatedUserId) {
+        Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
+        restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
         Category category = categoryRepository
                 .findByIdAndRestaurantId(categoryId, restaurantId)
@@ -97,7 +98,6 @@ public class CategoryService {
         categoryRepository.delete(category);
     }
 
-    // Used by FoodItemService for cross-restaurant validation
     public Category findCategoryByIdAndRestaurant(Long categoryId,
                                                     Long restaurantId) {
         return categoryRepository
@@ -105,4 +105,3 @@ public class CategoryService {
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId));
     }
 }
-
