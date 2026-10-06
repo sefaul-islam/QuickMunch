@@ -8,6 +8,7 @@ public record OrderEvent(
         String orderNumber,
         Long userId,
         Long restaurantId,
+        String email,
         String status,
         BigDecimal totalAmount,
         String deliveryAddress,

@@ -21,11 +21,45 @@ public class NotificationService {
         log.info("Order Number: {}", event.orderNumber());
         log.info("User ID: {}", event.userId());
         log.info("Restaurant ID: {}", event.restaurantId());
+        log.info("User Email: {}", event.email());
         log.info("Total Amount: ${}", event.totalAmount());
         log.info("Delivery Address: {}", event.deliveryAddress());
         log.info("Status: {}", event.status());
+        String subject = "QuickMunch Order Confirmed - " + event.orderNumber();
 
+        String body = """
+            Hello,
 
+            Thank you for ordering from QuickMunch!
+
+            Your order has been successfully created.
+
+            Order Details
+            -------------
+            Order Number: %s
+            Restaurant ID: %s
+            Status: %s
+            Total Amount: %s
+            Delivery Address: %s
+
+            We will notify you when your order status changes.
+
+            Thank you for using QuickMunch!
+
+            QuickMunch Team
+            """.formatted(
+                event.orderNumber(),
+                event.restaurantId(),
+                event.status(),
+                event.totalAmount(),
+                event.deliveryAddress()
+        );
+
+        emailService.sendEmail(
+                event.email(),
+                subject,
+                body
+        );
     }
 
     public void processOrderStatusUpdated(OrderEvent event) {
