@@ -1,12 +1,20 @@
 package com.example.notification_service.service;
 
 import com.example.notification_service.dto.OrderEvent;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class NotificationService {
+
+    private final EmailService emailService;
+
+    public NotificationService(EmailService emailService) {
+        this.emailService = emailService;
+    }
 
     public void processOrderCreated(OrderEvent event) {
         log.info("=== NEW ORDER NOTIFICATION ===");
@@ -16,7 +24,8 @@ public class NotificationService {
         log.info("Total Amount: ${}", event.totalAmount());
         log.info("Delivery Address: {}", event.deliveryAddress());
         log.info("Status: {}", event.status());
-        // TODO: Send actual email/SMS/push notification
+
+
     }
 
     public void processOrderStatusUpdated(OrderEvent event) {
