@@ -30,29 +30,30 @@ public class OrderEventPublisher {
     @Value("${rabbitmq.routing-key.order-cancelled}")
     private String orderCancelledRoutingKey;
 
-    public void publishOrderCreated(Order order) {
-        OrderEvent event = buildEvent(order, "ORDER_CREATED");
+    public void publishOrderCreated(Order order,String email) {
+        OrderEvent event = buildEvent(order,email, "ORDER_CREATED");
         rabbitTemplate.convertAndSend(orderExchange, orderCreatedRoutingKey, event);
         log.info("Published ORDER_CREATED event for order: {}", order.getOrderNumber());
     }
 
-    public void publishOrderStatusUpdated(Order order) {
-        OrderEvent event = buildEvent(order, "ORDER_STATUS_UPDATED");
+    public void publishOrderStatusUpdated(Order order,String email) {
+        OrderEvent event = buildEvent(order,email, "ORDER_STATUS_UPDATED");
         rabbitTemplate.convertAndSend(orderExchange, orderStatusUpdatedRoutingKey, event);
         log.info("Published ORDER_STATUS_UPDATED event for order: {}", order.getOrderNumber());
     }
 
-    public void publishOrderCancelled(Order order) {
-        OrderEvent event = buildEvent(order, "ORDER_CANCELLED");
+    public void publishOrderCancelled(Order order,String email) {
+        OrderEvent event = buildEvent(order, email,"ORDER_CANCELLED");
         rabbitTemplate.convertAndSend(orderExchange, orderCancelledRoutingKey, event);
         log.info("Published ORDER_CANCELLED event for order: {}", order.getOrderNumber());
     }
 
-    private OrderEvent buildEvent(Order order, String eventType) {
+    private OrderEvent buildEvent(Order order, String email,String eventType) {
         return new OrderEvent(
                 order.getOrderNumber(),
                 order.getUserId(),
                 order.getRestaurantId(),
+                email,
                 order.getStatus(),
                 order.getTotalAmount(),
                 order.getDeliveryAddress(),

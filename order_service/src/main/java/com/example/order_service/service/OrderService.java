@@ -31,7 +31,7 @@ public class OrderService {
     private BigDecimal defaultDeliveryFee;
 
     @Transactional
-    public OrderConfirmationResponse createOrder(Long userId, CreateOrderDTO dto) {
+    public OrderConfirmationResponse createOrder(Long userId,String email, CreateOrderDTO dto) {
         userServiceClient.verifyUserExists(userId);
         restaurantServiceClient.getRestaurant(dto.restaurantId());
 
@@ -68,7 +68,7 @@ public class OrderService {
         order.setTotalAmount(subtotal.add(defaultDeliveryFee));
 
         Order savedOrder = orderRepository.save(order);
-        orderEventPublisher.publishOrderCreated(savedOrder);
+        orderEventPublisher.publishOrderCreated(savedOrder,email);
 
         return mapToResponse(savedOrder);
     }
@@ -100,7 +100,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderConfirmationResponse updateOrderStatus(Long orderId, OrderStatusUpdateDTO dto, Long userId) {
+    public OrderConfirmationResponse updateOrderStatus(Long orderId, String email, OrderStatusUpdateDTO dto, Long userId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
         
@@ -108,13 +108,13 @@ public class OrderService {
         
         order.setStatus(dto.status());
         Order savedOrder = orderRepository.save(order);
-        orderEventPublisher.publishOrderStatusUpdated(savedOrder);
+        orderEventPublisher.publishOrderStatusUpdated(savedOrder,email);
         
         return mapToResponse(savedOrder);
     }
 
     @Transactional
-    public OrderConfirmationResponse cancelOrder(Long orderId, Long userId) {
+    public OrderConfirmationResponse cancelOrder(Long orderId,String email, Long userId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
                 
@@ -128,7 +128,7 @@ public class OrderService {
         
         order.setStatus(OrderStatus.CANCELLED);
         Order savedOrder = orderRepository.save(order);
-        orderEventPublisher.publishOrderCancelled(savedOrder);
+        orderEventPublisher.publishOrderCancelled(savedOrder,email);
         
         return mapToResponse(savedOrder);
     }

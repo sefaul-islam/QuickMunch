@@ -49,9 +49,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         var authorities = roles.stream()
                 .map(SimpleGrantedAuthority::new)
                 .toList();
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser(userId,email);
 
         var authentication = new UsernamePasswordAuthenticationToken(
-                userId, email, authorities);
+                authenticatedUser,null, authorities);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);

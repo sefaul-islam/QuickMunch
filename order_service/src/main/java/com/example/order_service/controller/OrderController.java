@@ -3,6 +3,7 @@ package com.example.order_service.controller;
 import com.example.order_service.dto.CreateOrderDTO;
 import com.example.order_service.dto.OrderConfirmationResponse;
 import com.example.order_service.dto.OrderStatusUpdateDTO;
+import com.example.order_service.security.AuthenticatedUser;
 import com.example.order_service.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,11 @@ public class OrderController {
     public ResponseEntity<OrderConfirmationResponse> createOrder(
             @Valid @RequestBody CreateOrderDTO dto,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        AuthenticatedUser user = (AuthenticatedUser) authentication.getPrincipal();
+        Long userId = user.userId();
+        String email = user.email();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(orderService.createOrder(userId, dto));
+                .body(orderService.createOrder(userId,email, dto));
     }
 
     @GetMapping("/{orderId}")
@@ -55,15 +58,19 @@ public class OrderController {
             @PathVariable Long orderId,
             @Valid @RequestBody OrderStatusUpdateDTO dto,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        return ResponseEntity.ok(orderService.updateOrderStatus(orderId, dto, userId));
+        AuthenticatedUser  user = (AuthenticatedUser) authentication.getPrincipal();
+        Long userId = user.userId();
+        String email = user.email();
+        return ResponseEntity.ok(orderService.updateOrderStatus(orderId, email,dto, userId));
     }
 
     @PatchMapping("/{orderId}/cancel")
     public ResponseEntity<OrderConfirmationResponse> cancelOrder(
             @PathVariable Long orderId,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        return ResponseEntity.ok(orderService.cancelOrder(orderId, userId));
+        AuthenticatedUser  user = (AuthenticatedUser) authentication.getPrincipal();
+        Long userId = user.userId();
+        String email = user.email();
+        return ResponseEntity.ok(orderService.cancelOrder(orderId,email,userId));
     }
 }
