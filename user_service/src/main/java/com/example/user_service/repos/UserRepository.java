@@ -17,4 +17,6 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.addresses WHERE u.id = :id AND u.isActive = true")
     Optional<User> findByIdWithAddresses(@Param("id") Long id);
+
+    boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
 }

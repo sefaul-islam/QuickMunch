@@ -1,5 +1,6 @@
 package com.example.user_service.controller;
 
+import com.example.user_service.dto.PublicUserProfileDTO;
 import com.example.user_service.dto.UpdateUserRequestDTO;
 import com.example.user_service.dto.UserProfileResponseDTO;
 import com.example.user_service.service.UserService;
@@ -27,9 +28,9 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserProfileResponseDTO> getUser(
+    public ResponseEntity<PublicUserProfileDTO> getUser(
             @PathVariable("userId") Long userId) {
-        UserProfileResponseDTO user = userService.getUserById(userId);
+        PublicUserProfileDTO user = userService.getPublicUserProfile(userId);
         return ResponseEntity.ok(user);
     }
 

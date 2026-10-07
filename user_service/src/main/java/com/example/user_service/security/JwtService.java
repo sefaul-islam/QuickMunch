@@ -18,12 +18,15 @@ public class JwtService {
 
     private final SecretKey signingKey;
     private final long expirationTimeMs;
+    private final long refreshExpirationTimeMs;
 
     public JwtService(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration:86400000}") long expirationTimeMs) {
+            @Value("${jwt.expiration:86400000}") long expirationTimeMs,
+            @Value("${jwt.refresh-expiration:604800000}") long refreshExpirationTimeMs) {
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationTimeMs = expirationTimeMs;
+        this.refreshExpirationTimeMs = refreshExpirationTimeMs;
     }
 
     public String generateToken(Long userId, String email, Set<String> roles) {
@@ -33,6 +36,17 @@ public class JwtService {
                 .claim("roles", roles)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationTimeMs))
+                .signWith(signingKey)
+                .compact();
+    }
+
+    public String generateRefreshToken(Long userId, String email) {
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("email", email)
+                .claim("type", "refresh")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + refreshExpirationTimeMs))
                 .signWith(signingKey)
                 .compact();
     }
@@ -52,6 +66,10 @@ public class JwtService {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+
+    public boolean isRefreshToken(String token) {
+        return "refresh".equals(extractClaims(token).get("type", String.class));
     }
 
     public Long extractUserId(String token) {

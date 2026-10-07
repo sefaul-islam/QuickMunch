@@ -98,12 +98,12 @@ public class AddressService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Address not found with id: " + addressId));
 
-        address.setLabel(dto.label());
-        address.setStreet(dto.street());
-        address.setCity(dto.city());
-        address.setState(dto.state());
-        address.setZipCode(dto.zipCode());
-        address.setCountry(dto.country());
+        if (dto.label() != null) address.setLabel(dto.label());
+        if (dto.street() != null) address.setStreet(dto.street());
+        if (dto.city() != null) address.setCity(dto.city());
+        if (dto.state() != null) address.setState(dto.state());
+        if (dto.zipCode() != null) address.setZipCode(dto.zipCode());
+        if (dto.country() != null) address.setCountry(dto.country());
 
         Address saved = addressRepository.save(address);
         return mapToDto(saved);

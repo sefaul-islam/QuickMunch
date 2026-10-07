@@ -15,11 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Set;
 
 @Service
-public class Custom0Auth2UserService extends OidcUserService {
+public class CustomOAuth2UserService extends OidcUserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
-    public Custom0Auth2UserService(UserRepository userRepository,
+    public CustomOAuth2UserService(UserRepository userRepository,
                                    RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -48,10 +48,14 @@ public class Custom0Auth2UserService extends OidcUserService {
         String fName = firstName;
         String lName = lastName;
 
-        userRepository
-                .findByGoogleId(googleId)
-                .orElseGet(() -> {
-
+        userRepository.findByGoogleId(googleId)
+                .ifPresentOrElse(user -> {
+                    user.setFirstName(fName);
+                    user.setLastName(lName);
+                    user.setEmail(email);
+                    user.setProfilePictureUrl(picture);
+                    userRepository.save(user);
+                }, () -> {
                     Role customerRole = roleRepository
                             .findByName(RoleName.ROLE_CUSTOMER)
                             .orElseGet(() -> {
@@ -69,10 +73,9 @@ public class Custom0Auth2UserService extends OidcUserService {
                     newUser.setProfilePictureUrl(picture);
                     newUser.setRoles(Set.of(customerRole));
 
-                    return userRepository.save(newUser);
+                    userRepository.save(newUser);
                 });
 
         return oidcUser;
     }
 }
-

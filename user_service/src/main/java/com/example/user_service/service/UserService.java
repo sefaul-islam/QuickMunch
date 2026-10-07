@@ -1,6 +1,7 @@
 package com.example.user_service.service;
 
 import com.example.user_service.dto.AddressResponseDTO;
+import com.example.user_service.dto.PublicUserProfileDTO;
 import com.example.user_service.dto.UpdateUserRequestDTO;
 import com.example.user_service.dto.UserProfileResponseDTO;
 import com.example.user_service.entity.User;
@@ -30,6 +31,14 @@ public class UserService {
         return mapToDto(user);
     }
 
+    @Transactional(readOnly = true)
+    public PublicUserProfileDTO getPublicUserProfile(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found with id: " + id));
+        return new PublicUserProfileDTO(user.getId(), user.getFirstName(), user.getProfilePictureUrl());
+    }
+
     @Transactional
     public UserProfileResponseDTO updateUser(Long id,
                                               UpdateUserRequestDTO dto,
@@ -52,6 +61,9 @@ public class UserService {
             user.setLastName(dto.lastName());
         }
         if (dto.phoneNumber() != null) {
+            if (userRepository.existsByPhoneNumberAndIdNot(dto.phoneNumber(), id)) {
+                throw new com.example.user_service.exception.DuplicateResourceException("Phone number already in use: " + dto.phoneNumber());
+            }
             user.setPhoneNumber(dto.phoneNumber());
         }
 

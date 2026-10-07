@@ -13,6 +13,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Set;
 
+import org.springframework.http.MediaType;
+import java.time.LocalDateTime;
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -38,7 +41,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         if (!jwtService.isTokenValid(token)) {
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter().write("{\"status\":401,\"message\":\"Invalid or expired token\",\"timestamp\":\"" + LocalDateTime.now() + "\"}");
             return;
         }
 
