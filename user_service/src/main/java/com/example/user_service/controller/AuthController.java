@@ -7,10 +7,7 @@ import com.example.user_service.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,14 +31,14 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @org.springframework.web.bind.annotation.PostMapping("/refresh")
+    @PostMapping("/refresh")
     public ResponseEntity<AuthResponseDTO> refreshToken(@RequestBody java.util.Map<String, String> request) {
         String refreshToken = request.get("refreshToken");
         AuthResponseDTO response = authService.refreshToken(refreshToken);
         return ResponseEntity.ok(response);
     }
 
-    @org.springframework.web.bind.annotation.PutMapping("/change-password")
+    @PutMapping("/change-password")
     public ResponseEntity<Void> changePassword(org.springframework.security.core.Authentication authentication,
                                                 @Valid @RequestBody com.example.user_service.dto.ChangePasswordRequestDTO dto) {
         Long userId = (Long) authentication.getPrincipal();
