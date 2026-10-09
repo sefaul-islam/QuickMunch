@@ -1,463 +1,766 @@
 # 🍔 QuickMunch
 
-> A scalable, cloud-native food delivery platform built with **Spring Boot, Docker, Kubernetes, Terraform, and GitHub Actions**.
+> A cloud-native food delivery platform built with **Java, Spring Boot, PostgreSQL, RabbitMQ, Docker, Kubernetes, Terraform, and GitHub Actions**.
 
-**QuickMunch** is a food delivery application currently under development. The goal of this project is not only to build a functional food delivery platform, but also to explore how a modern backend system can be designed, containerized, deployed, and managed using **microservices and DevOps practices**.
+QuickMunch is a food delivery microservices project focused on building a functional backend while learning how distributed applications are designed, containerized, tested, deployed, and operated using modern DevOps practices.
 
-🚧 **Project Status: In Development**
+The project explores service-to-service communication, asynchronous event processing, authentication, container orchestration, infrastructure as code, and automated deployment.
 
-A lot of the system is still being built. The current implementation contains the initial **User Service**, while additional microservices, infrastructure, CI/CD pipelines, and Kubernetes deployment are planned.
+**Project Status: Active Development**
+
+The core User, Restaurant, and Order Services have been implemented, alongside RabbitMQ-based event communication with the Notification Service. Payment processing, comprehensive testing, Kubernetes deployment, infrastructure automation, and production-readiness improvements remain on the roadmap.
 
 ---
 
-## 🎯 Project Goals
+## 📌 Table of Contents
 
-QuickMunch is being developed with two main goals:
+* [Project Overview](#-project-overview)
+* [Architecture](#️-architecture)
+* [Microservices](#-microservices)
+* [Technology Stack](#️-technology-stack)
+* [Service Communication](#-service-communication)
+* [Authentication and Security](#-authentication-and-security)
+* [Docker and Local Development](#-docker-and-local-development)
+* [Kubernetes](#️-kubernetes)
+* [Infrastructure as Code](#️-infrastructure-as-code)
+* [CI/CD](#-cicd)
+* [Project Structure](#-project-structure)
+* [Getting Started](#-getting-started)
+* [Development Roadmap](#-development-roadmap)
+* [Engineering Goals](#-engineering-goals)
+* [License](#-license)
 
-### 1. Build a real-world food delivery platform
+---
 
-The application will eventually support functionality such as:
+## 🎯 Project Overview
+
+QuickMunch has two primary objectives.
+
+### 1. Build a food delivery backend
+
+The platform is being developed around independent services responsible for different business capabilities.
+
+Planned functionality includes:
 
 * User registration and authentication
 * Google OAuth2 login
-* Restaurant management
-* Food/menu management
-* Cart management
-* Order placement
-* Order tracking
-* Payments
-* Notifications
+* Restaurant and food management
+* Order creation and lifecycle management
+* Payment processing
+* Email notifications
 * Reviews and ratings
+* Order status updates
 
-### 2. Build it using modern DevOps architecture
+### 2. Apply real-world backend and DevOps practices
 
-The project will also focus on:
+The project explores:
 
 * Microservices architecture
-* Docker containerization
-* Kubernetes orchestration
-* Infrastructure as Code
-* Automated CI/CD
-* Service discovery
-* Asynchronous communication
-* Scalable deployments
-* Monitoring and observability
+* RESTful APIs and synchronous communication
+* Asynchronous messaging with RabbitMQ
+* Independent service containerization
+* PostgreSQL persistence
+* Spring Security and JWT authentication
+* Infrastructure provisioning with Terraform
+* Kubernetes orchestration using kubeadm
+* CI/CD automation with GitHub Actions
+* Logging, monitoring, reliability, and failure handling
+
+The goal is to understand not only how to make an application work, but also how its components communicate, deploy, recover, and evolve independently.
 
 ---
 
-# 🏗️ Planned Architecture
+## 🏗️ Architecture
 
-The final architecture is still evolving.
+QuickMunch follows a microservices-oriented architecture. Each service owns a specific business responsibility and can evolve independently.
 
-The current planned direction is:
+The following diagram represents the current architectural direction. Components marked as planned are not yet fully implemented or deployed.
 
 ```text
-                         ┌───────────────┐
-                         │    Client     │
-                         │ Web / Mobile  │
-                         └───────┬───────┘
-                                 │
-                                 ▼
-                         ┌───────────────┐
-                         │ API Gateway   │
-                         └───────┬───────┘
-                                 │
-          ┌──────────────────────┼──────────────────────┐
-          │                      │                      │
-          ▼                      ▼                      ▼
- ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
- │  User Service   │    │ Restaurant      │    │  Order Service  │
- │                 │    │ Service         │    │                 │
- └────────┬────────┘    └────────┬────────┘    └────────┬────────┘
-          │                      │                      │
-          ▼                      ▼                      ▼
-      PostgreSQL            PostgreSQL             PostgreSQL
+                         ┌─────────────────────┐
+                         │   Web / Mobile      │
+                         │       Client        │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │ Kubernetes Ingress  │
+                         │     (Planned)       │
+                         └──────────┬──────────┘
+                                    │
+                ┌───────────────────┼──────────────────┐
+                │                   │                  │
+                ▼                   ▼                  ▼
+        ┌──────────────┐   ┌────────────────┐  ┌──────────────┐
+        │ User Service │   │   Restaurant   │  │ Order Service│
+        │              │   │    Service     │  │              │
+        └──────┬───────┘   └───────┬────────┘  └──────┬───────┘
+               │                   │                  │
+               ▼                   ▼                  ▼
+        ┌──────────────┐   ┌────────────────┐  ┌──────────────┐
+        │  PostgreSQL  │   │  PostgreSQL    │  │  PostgreSQL  │
+        └──────────────┘   └────────────────┘  └──────────────┘
+                                                      │
+                                                      ▼
+                                            ┌──────────────────┐
+                                            │     RabbitMQ     │
+                                            │  Order Events    │
+                                            └────────┬─────────┘
+                                                     │
+                                                     ▼
+                                            ┌──────────────────┐
+                                            │  Notification    │
+                                            │     Service      │
+                                            └────────┬─────────┘
+                                                     │
+                                                     ▼
+                                               Email Provider
 
-                         ┌─────────────────┐
-                         │ Notification    │
-                         │ Service         │
-                         └────────┬────────┘
-                                  │
-                                  ▼
-                            Message Broker
+
+                                            ┌──────────────────┐
+                                            │  Payment Service │
+                                            │     (Planned)    │
+                                            └──────────────────┘
 ```
 
-The architecture above is **not final** and will change as development progresses.
+### Architecture decisions
+
+* **Microservices:** Business responsibilities are separated into independently developed services.
+* **Database ownership:** Each service should own its data and expose the required operations through its API.
+* **Synchronous communication:** REST APIs are used when an immediate response is required.
+* **Asynchronous communication:** RabbitMQ handles order events and downstream processing.
+* **Service discovery:** Kubernetes Services and cluster DNS will provide service discovery within the Kubernetes environment.
+* **External access:** Kubernetes Ingress is planned as the external entry point. A separate Spring Cloud API Gateway is not part of the current design.
+
+The architecture will evolve as additional services and infrastructure are implemented.
 
 ---
 
-# 🧩 Planned Microservices
+## 🧩 Microservices
 
-| Service              | Purpose                               | Status         |
-| -------------------- | ------------------------------------- | -------------- |
-| User Service         | Authentication, users, profiles       | 🟡 In Progress |
-| Restaurant Service   | Restaurants and restaurant management | 🔴 Planned     |
-| Menu Service         | Food/menu management                  | 🔴 Planned     |
-| Cart Service         | Shopping cart management              | 🔴 Planned     |
-| Order Service        | Order creation and management         | 🔴 Planned     |
-| Payment Service      | Payment processing                    | 🔴 Planned     |
-| Notification Service | Email/notification processing         | 🔴 Planned     |
-| Review Service       | Ratings and reviews                   | 🔴 Planned     |
-| API Gateway          | Central entry point for clients       | 🔴 Planned     |
+| Service              | Responsibility                                      | Status                        |
+| -------------------- | --------------------------------------------------- | ----------------------------- |
+| User Service         | Authentication, users, profiles, Google OAuth2      | Implemented                   |
+| Restaurant Service   | Restaurant management and related data              | Implemented                   |
+| Order Service        | Order creation, validation, persistence, and events | Implemented                   |
+| Notification Service | Order-event consumption and email delivery          | Integrated; hardening planned |
+| Payment Service      | Payment processing and transaction management       | Planned                       |
+| Menu Service         | Dedicated food/menu management                      | Under consideration           |
+| Cart Service         | Shopping cart management                            | Under consideration           |
+| Review Service       | Ratings and reviews                                 | Under consideration           |
 
-The service boundaries may change as the project evolves.
+Separate Menu, Cart, and Review Services will be introduced only if they provide useful business boundaries.
 
----
+### User Service
 
-# 👤 Current Implementation — User Service
+The User Service handles user-related operations and provides the foundation for authentication.
 
-The **User Service** is currently the first implemented service in QuickMunch.
+Current technologies and capabilities include:
 
-### Current technologies
-
-* Java
-* Spring Boot
+* Java and Spring Boot
 * Spring Security
-* Spring Data JPA
-* PostgreSQL
-* OAuth2 / Google Login
-* Docker
+* Spring Data JPA and PostgreSQL
+* Google OAuth2 login and user persistence
+* JWT-based request authentication
+* User profile and account information
 
-### Current responsibilities
+### Restaurant Service
 
-The User Service is being designed to handle:
+The Restaurant Service handles restaurant-related business data and operations.
 
-* User authentication
-* User information
-* Google OAuth2 authentication
-* Persistent user information
-* User-related database operations
+Its responsibilities include:
 
-The service is currently being developed and additional functionality will be added later.
+* Restaurant management
+* Restaurant data persistence
+* Restaurant-related API operations
+* Supplying restaurant information to other services
+
+The Order Service communicates with this service when it needs restaurant and food-item information.
+
+### Order Service
+
+The Order Service coordinates the order creation workflow.
+
+Its current responsibilities include:
+
+* Validating relevant user and restaurant information
+* Retrieving food-item information
+* Calculating order totals
+* Creating order records
+* Managing order status and payment status fields
+* Publishing order-related events through RabbitMQ
+
+### Notification Service
+
+The Notification Service processes order events and handles email delivery.
+
+Its current implementation includes:
+
+* A RabbitMQ consumer for order-created events
+* Event deserialization into a notification DTO
+* Email delivery through Spring's `JavaMailSender`
+* A separate notification-processing component
+
+The service keeps notification processing outside the synchronous order-creation request.
+
+Future improvements include retries, duplicate-event protection, dead-letter queues, and delivery tracking.
+
+### Payment Service — Planned
+
+The Payment Service will handle payment operations independently of the Order Service.
+
+Planned responsibilities include:
+
+* Payment initiation and transaction records
+* Integration with a payment provider
+* Payment status tracking
+* Secure callback and webhook verification
+* Idempotent payment processing
+* Payment success and failure events
+* Integration with the order lifecycle
+
+Payment status will be based on verified server-side provider responses rather than client-submitted success messages. The payment provider and final integration workflow have not yet been selected.
 
 ---
 
-# 🐳 Docker
+## 🔄 Service Communication
 
-QuickMunch services are being containerized using Docker.
+QuickMunch uses both synchronous and asynchronous communication, depending on the operation.
 
-The current development setup includes:
+### Synchronous communication
+
+REST APIs are used when a service needs an immediate response from another service.
+
+For example, when creating an order, the Order Service retrieves relevant user, restaurant, and food-item information before processing the order.
 
 ```text
-Docker
+Order Request
+     │
+     ▼
+Order Service
+     │
+     ├──► User Service
+     │       └── User validation / information
+     │
+     ├──► Restaurant Service
+     │       └── Restaurant / food information
+     │
+     ▼
+Order Persistence
+```
+
+Synchronous communication introduces dependencies on downstream service availability. Timeouts, error handling, and resilience mechanisms are important areas for improvement.
+
+### Asynchronous communication with RabbitMQ
+
+RabbitMQ is used to publish order events for downstream processing.
+
+| Component             | Name                   |
+| --------------------- | ---------------------- |
+| Exchange              | `order.exchange`       |
+| Order created         | `order.created`        |
+| Order status updated  | `order.status.updated` |
+| Order cancelled       | `order.cancelled`      |
+| Created-order queue   | `order-created`        |
+| Status-update queue   | `order-status-updated` |
+| Cancelled-order queue | `order-cancelled`      |
+
+The Notification Service currently consumes events from the created-order queue.
+
+```text
+Order Service
+     │
+     │ Publish OrderEvent
+     ▼
+order.exchange
+     │
+     │ Routing key: order.created
+     ▼
+order-created queue
+     │
+     ▼
+Notification Service
+     │
+     ▼
+Email Service
+     │
+     ▼
+Email Provider
+```
+
+Order events can contain information such as the order number, user identifier, restaurant identifier, email address, order status, total amount, delivery address, event type, and timestamp.
+
+The exchange and routing-key conventions establish the messaging structure for additional consumers and event types.
+
+**Reliability considerations:** RabbitMQ delivery alone does not guarantee exactly-once processing or successful email delivery. Production hardening will need to address duplicate events, idempotent consumers, retry policies, dead-letter queues, message durability, and reliable event publication.
+
+---
+
+## 🔐 Authentication and Security
+
+Security is an important part of QuickMunch's backend design.
+
+The User Service provides the foundation for authentication using Spring Security, Google OAuth2, and JWT-based request validation.
+
+The broader security roadmap includes:
+
+* Consistent authentication and authorization across protected APIs
+* Secure JWT signing and verification
+* Role-based authorization where required
+* Environment-based configuration for credentials
+* Secret management for database, messaging, and email credentials
+* Input validation and consistent error responses
+* Dependency and container vulnerability scanning
+* Verification of payment-provider callbacks and webhooks
+
+Sensitive credentials must not be committed to source control. Production credentials should be managed using an appropriate secret-management mechanism.
+
+---
+
+## 🐳 Docker and Local Development
+
+Docker is used to package application services and supporting infrastructure into reproducible environments.
+
+The development environment includes containerized application services and PostgreSQL, with RabbitMQ supporting asynchronous messaging.
+
+The intended local topology is:
+
+```text
+Docker Compose Environment
 │
 ├── User Service
-│
-└── PostgreSQL
+├── Restaurant Service
+├── Order Service
+├── Notification Service
+├── PostgreSQL
+└── RabbitMQ
 ```
 
-The services communicate through a Docker network during local development.
+The exact services and configurations depend on the current Compose file.
 
-Example:
+### Containerization goals
+
+* Build an image for each service
+* Keep service configuration outside application source code
+* Use environment variables for deployment-specific settings
+* Persist database data with appropriate volumes
+* Configure health checks and startup behavior
+* Optimize image sizes and build caching
+* Avoid embedding credentials in images
+* Support repeatable local builds and deployments
+
+Image size is monitored as part of the containerization process. The goal is to remove unnecessary dependencies without sacrificing maintainability, security, or debugging capability.
+
+---
+
+## ☸️ Kubernetes
+
+Kubernetes will orchestrate QuickMunch in a clustered deployment environment.
+
+The current deployment direction is to build a Kubernetes cluster using **kubeadm** and deploy the services into it.
+
+Planned capabilities include:
+
+* Namespaces for environment and resource organization
+* Deployments and Services for application workloads
+* Kubernetes DNS for service discovery
+* Ingress for external HTTP/HTTPS access
+* ConfigMaps and Secrets for configuration
+* Readiness, liveness, and startup probes where appropriate
+* Rolling updates and rollback strategies
+* Resource requests and limits
+* Horizontal Pod Autoscaling where supported by metrics
+* Persistent storage for stateful components
+* Network policies and access restrictions
+
+The design does not require a separate Eureka service registry or Spring Cloud API Gateway. Kubernetes Services and cluster DNS will provide service discovery within the cluster.
+
+Kubernetes manifests, cluster provisioning, and deployment automation remain part of the roadmap.
+
+---
+
+## 🏗️ Infrastructure as Code
+
+Terraform will define and manage infrastructure declaratively.
+
+The goal is to make infrastructure reproducible, reviewable, and easier to maintain instead of relying entirely on manual cloud-console operations.
+
+Potential infrastructure components include:
+
+* Cloud compute instances
+* Virtual networking and subnets
+* Security groups and access rules
+* Load balancing and ingress-related infrastructure
+* Kubernetes cluster nodes
+* Supporting storage and networking resources
+* Remote Terraform state and state locking
+
+The infrastructure will be designed incrementally, with attention to state management, least-privilege permissions, cost control, and resource lifecycle management.
+
+The final cloud architecture and automated provisioning workflow are still under development.
+
+---
+
+## 🔁 CI/CD
+
+GitHub Actions is the intended CI/CD platform for automating application validation, image publishing, and deployment.
+
+The target workflow is:
 
 ```text
-quickmunch network
-
-┌─────────────────────────────┐
-│                             │
-│  quickmunch-user-service    │
-│           │                 │
-│           │                 │
-│           ▼                 │
-│     quickmunchdb            │
-│     PostgreSQL              │
-│                             │
-└─────────────────────────────┘
-```
-
-Docker Compose may be introduced later as the number of services increases.
-
----
-
-# ☸️ Kubernetes
-
-Kubernetes will be used to orchestrate the application in the deployment environment.
-
-The current plan is to build and deploy the application using a Kubernetes cluster created with **kubeadm**.
-
-Planned Kubernetes responsibilities include:
-
-* Pod management
-* Service discovery
-* Load balancing
-* Rolling deployments
-* Self-healing
-* Horizontal scaling
-* Configuration management
-* Secret management
-
-The Kubernetes architecture is still under development.
-
----
-
-# 🏗️ Infrastructure as Code
-
-**Terraform** will be used to provision and manage infrastructure.
-
-The goal is to avoid manually creating infrastructure and instead define it as code.
-
-Planned infrastructure may include:
-
-```text
-Terraform
-    │
-    ├── Compute infrastructure
-    ├── Networking
-    ├── Security groups
-    ├── Kubernetes infrastructure
-    └── Supporting resources
-```
-
-The exact infrastructure design will evolve during development.
-
----
-
-# 🔄 CI/CD
-
-GitHub Actions will be used to build the project's CI/CD pipeline.
-
-The planned workflow is:
-
-```text
-Developer
-    │
-    ▼
-Git Push
-    │
-    ▼
-GitHub
-    │
-    ▼
-GitHub Actions
-    │
-    ├── Build
-    ├── Test
-    ├── Code Quality
-    ├── Security Scan
-    ├── Docker Build
-    └── Image Push
+Developer Push / Pull Request
              │
              ▼
-        Container Registry
+        GitHub Actions
              │
-             ▼
-         Kubernetes
-             │
-             ▼
-        Application
+             ├── Compile and Build
+             ├── Run Unit Tests
+             ├── Run Integration Tests
+             ├── Analyze Code Quality
+             ├── Scan Dependencies
+             ├── Build Docker Images
+             ├── Scan Container Images
+             └── Publish Versioned Images
+                         │
+                         ▼
+                Container Registry
+                         │
+                         ▼
+                 Kubernetes Deploy
+                         │
+                         ▼
+                 Health Verification
 ```
 
-Additional tools such as **Trivy** and **SonarQube** may be integrated into the pipeline.
+Planned integrations include:
+
+* GitHub Actions for workflow automation
+* JUnit for automated Java testing
+* SonarQube for code-quality analysis
+* Trivy for vulnerability scanning
+* A container registry for versioned images
+* Kubernetes deployment automation
+
+The workflow describes the target pipeline. Individual stages should be marked complete only after they have been implemented and verified.
 
 ---
 
-# 🛠️ Technology Stack
+## 🛠️ Technology Stack
 
-## Backend
+| Category               | Technologies                             |
+| ---------------------- | ---------------------------------------- |
+| Language               | Java                                     |
+| Backend Framework      | Spring Boot                              |
+| Security               | Spring Security, JWT, OAuth2             |
+| Persistence            | Spring Data JPA, Hibernate               |
+| Database               | PostgreSQL                               |
+| API Communication      | REST APIs                                |
+| Messaging              | RabbitMQ                                 |
+| Email                  | Spring `JavaMailSender`                  |
+| Containerization       | Docker, Docker Compose                   |
+| Orchestration          | Kubernetes, kubeadm                      |
+| Service Discovery      | Kubernetes Services and DNS              |
+| Infrastructure as Code | Terraform                                |
+| CI/CD                  | GitHub Actions                           |
+| Testing                | JUnit; broader automated testing planned |
+| Code Quality           | SonarQube — planned integration          |
+| Security Scanning      | Trivy — planned integration              |
 
-* Java
-* Spring Boot
-* Spring Security
-* Spring Data JPA
-* REST APIs
-
-## Database
-
-* PostgreSQL
-
-## Authentication
-
-* Spring Security
-* OAuth2
-* Google OAuth2
-
-## Containerization
-
-* Docker
-
-## Orchestration
-
-* Kubernetes
-* kubeadm
-
-## Infrastructure
-
-* Terraform
-
-## CI/CD
-
-* GitHub Actions
-
-## Planned DevOps / Supporting Technologies
-
-* Container Registry
-* Nginx
-* Load Balancing
-* RabbitMQ
-* Redis
-* Trivy
-* SonarQube
-
-> Technologies marked as planned may change during development.
+Additional technologies such as Redis, a payment provider, and dedicated observability tooling may be introduced when they address a specific architectural requirement.
 
 ---
 
-# 📁 Project Structure
+## 📁 Project Structure
 
-The repository structure is currently evolving.
+The repository is organized around independently developed services and supporting infrastructure. The exact directory layout may evolve as the project grows.
 
-The planned structure may look similar to:
+An illustrative structure is:
 
 ```text
 quickmunch/
 │
-├── services/
-│   │
-│   ├── user-service/
-│   │
-│   ├── restaurant-service/
-│   │
-│   ├── menu-service/
-│   │
-│   ├── cart-service/
-│   │
-│   ├── order-service/
-│   │
-│   └── notification-service/
+├── user-service/
+│   ├── src/
+│   ├── Dockerfile
+│   └── pom.xml
+│
+├── restaurant-service/
+│   ├── src/
+│   ├── Dockerfile
+│   └── pom.xml
+│
+├── order-service/
+│   ├── src/
+│   ├── Dockerfile
+│   └── pom.xml
+│
+├── notification-service/
+│   ├── src/
+│   ├── Dockerfile
+│   └── pom.xml
+│
+├── payment-service/              # Planned
 │
 ├── infrastructure/
-│   │
 │   └── terraform/
 │
 ├── kubernetes/
-│   │
 │   ├── namespaces/
 │   ├── deployments/
 │   ├── services/
+│   ├── config/
 │   └── ingress/
 │
 ├── .github/
 │   └── workflows/
 │
+├── compose.yaml                  # If maintained at repository root
 └── README.md
 ```
 
-This structure is a **planned direction** and may change as the project grows.
+This is a reference layout, not a guarantee of the repository's exact current file structure.
 
 ---
 
-# 🚀 Development Roadmap
+## 🚀 Getting Started
 
-## Phase 1 — Foundation
+### Prerequisites
 
-* [x] Create project
-* [x] Create User Service
-* [x] Set up Spring Boot
-* [x] Set up PostgreSQL
-* [x] Containerize User Service
-* [x] Containerize PostgreSQL
-* [x] Configure Docker networking
-* [ ] Complete User Service
-* [ ] Add comprehensive tests
+Install the following tools before running the services:
 
-## Phase 2 — Core Services
+* JDK compatible with the project's Spring Boot version
+* Maven, or use the included Maven Wrapper
+* Docker Engine
+* Docker Compose
 
-* [ ] Restaurant Service
-* [ ] Menu Service
-* [ ] Cart Service
-* [ ] Order Service
-* [ ] Payment Service
-* [ ] Notification Service
-* [ ] Review Service
+PostgreSQL and RabbitMQ can be run as containers rather than installed directly on the host.
 
-## Phase 3 — Communication
+### 1. Clone the repository
 
-* [ ] Define service communication patterns
-* [ ] Implement synchronous service communication
-* [ ] Introduce RabbitMQ for asynchronous operations
-* [ ] Implement notification workers
-* [ ] Add Redis where appropriate
-
-## Phase 4 — Kubernetes
-
-* [ ] Create Kubernetes cluster using kubeadm
-* [ ] Create namespaces
-* [ ] Create Deployments
-* [ ] Create Services
-* [ ] Configure ConfigMaps
-* [ ] Configure Secrets
-* [ ] Configure Ingress
-* [ ] Implement health checks
-* [ ] Implement rolling deployments
-* [ ] Test horizontal scaling
-
-## Phase 5 — Infrastructure
-
-* [ ] Create Terraform configuration
-* [ ] Provision required infrastructure
-* [ ] Automate Kubernetes infrastructure
-* [ ] Manage infrastructure configuration through Terraform
-
-## Phase 6 — CI/CD
-
-* [ ] Create GitHub Actions pipeline
-* [ ] Automate application testing
-* [ ] Build Docker images
-* [ ] Scan images with Trivy
-* [ ] Integrate SonarQube
-* [ ] Push images to a container registry
-* [ ] Deploy to Kubernetes automatically
-
-## Phase 7 — Production Readiness
-
-* [ ] Monitoring
-* [ ] Logging
-* [ ] Metrics
-* [ ] Distributed tracing
-* [ ] Secrets management
-* [ ] Backup strategy
-* [ ] Failure testing
-* [ ] Load testing
-* [ ] Security hardening
-
----
-
-# 📌 Current Status
-
-> **QuickMunch is an active work in progress.**
-
-At the moment, development is focused on the **User Service** and establishing the foundation for the rest of the platform.
-
-The Kubernetes, Terraform, CI/CD, and additional microservices architecture are planned but **not yet fully implemented**.
-
-This README will be updated as new components are completed.
-
----
-
-# 🎓 Project Purpose
-
-QuickMunch is being built as a hands-on project to understand how a real-world distributed application can move from:
-
-```text
-Application Code
-       ↓
-Docker
-       ↓
-Microservices
-       ↓
-Kubernetes
-       ↓
-Infrastructure as Code
-       ↓
-CI/CD
-       ↓
-Scalable Deployment
+```bash
+git clone https://github.com/sefaul-islam/QuickMunch.git
+cd QuickMunch
 ```
 
-Rather than treating each technology independently, the project aims to connect them into one complete system.
+Ensure that the repository URL and capitalization match the actual GitHub repository.
+
+### 2. Configure environment variables
+
+Configure the database, RabbitMQ, authentication, and email settings required by the services you want to run.
+
+Typical configuration categories include:
+
+```text
+DATABASE_URL
+DATABASE_USERNAME
+DATABASE_PASSWORD
+
+RABBITMQ_HOST
+RABBITMQ_PORT
+RABBITMQ_USERNAME
+RABBITMQ_PASSWORD
+
+JWT_SECRET
+
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+
+MAIL_HOST
+MAIL_PORT
+MAIL_USERNAME
+MAIL_PASSWORD
+```
+
+These are illustrative variable names. Use the actual names expected by each service's configuration.
+
+Keep secrets in an untracked local environment file or another appropriate secret store. Do not commit real credentials.
+
+### 3. Start the development environment
+
+If the repository's Compose configuration is available at the root:
+
+```bash
+docker compose up --build
+```
+
+To run the environment in the background:
+
+```bash
+docker compose up --build -d
+```
+
+Check service status and logs:
+
+```bash
+docker compose ps
+docker compose logs -f
+```
+
+### 4. Run an individual service
+
+For a Maven-based service, navigate to its directory and run:
+
+```bash
+./mvnw spring-boot:run
+```
+
+If Maven is installed globally, use:
+
+```bash
+mvn spring-boot:run
+```
+
+Make sure the service's required database, messaging infrastructure, and environment variables are configured before starting it.
+
+### 5. Configure authentication
+
+Google OAuth2 login requires valid Google OAuth client credentials and an authorized redirect URI matching the application's configuration.
+
+JWT signing configuration must also be supplied securely. Do not use example credentials or development secrets in a production deployment.
+
+**Note:** Exact service ports, API endpoints, Compose commands, and environment-variable names should be documented from the current implementation rather than assumed from this overview.
 
 ---
 
-# 📜 License
+## 🗺️ Development Roadmap
 
-This project is currently under development.
+### Phase 1 — Core Backend Services
+
+* [x] Implement User Service
+* [x] Implement Restaurant Service
+* [x] Implement Order Service
+* [x] Implement Notification Service foundation
+* [x] Integrate RabbitMQ with the order workflow
+* [x] Establish asynchronous order-event consumption
+* [ ] Expand automated test coverage across services
+* [ ] Standardize validation and error responses
+* [ ] Document service APIs and configuration
+
+### Phase 2 — Reliable Distributed Communication
+
+* [x] Establish synchronous REST communication between core services
+* [x] Configure order exchange and routing-key conventions
+* [x] Connect order-created events to the notification workflow
+* [ ] Complete and test status-update and cancellation consumers
+* [ ] Add idempotent event processing
+* [ ] Configure retries and dead-letter queues
+* [ ] Improve timeout and downstream-failure handling
+* [ ] Evaluate the transactional outbox pattern for reliable event publication
+
+### Phase 3 — Payment Processing
+
+* [ ] Define payment domain and transaction lifecycle
+* [ ] Implement Payment Service
+* [ ] Select a suitable payment provider
+* [ ] Integrate payment initiation and verification
+* [ ] Validate provider callbacks or webhooks
+* [ ] Implement idempotency and duplicate-request protection
+* [ ] Publish payment outcome events
+* [ ] Define order and payment state transitions
+* [ ] Test failed, pending, duplicated, and successful payment scenarios
+
+### Phase 4 — Containerization and Local Infrastructure
+
+* [ ] Standardize Dockerfiles across services
+* [ ] Finalize Docker Compose configuration
+* [ ] Externalize configuration and secrets
+* [ ] Add appropriate container health checks
+* [ ] Optimize image sizes and build caching
+* [ ] Test clean startup and recovery behavior
+
+### Phase 5 — Kubernetes Deployment
+
+* [ ] Provision a kubeadm cluster
+* [ ] Configure namespaces and networking
+* [ ] Deploy application services
+* [ ] Configure Kubernetes Services and DNS
+* [ ] Configure Ingress
+* [ ] Configure ConfigMaps and Secrets
+* [ ] Add health probes and resource limits
+* [ ] Implement and test rolling deployments
+* [ ] Validate scaling and recovery behavior
+
+### Phase 6 — Terraform and Cloud Infrastructure
+
+* [ ] Define reusable Terraform configurations
+* [ ] Configure networking and compute resources
+* [ ] Configure remote state and state locking
+* [ ] Provision infrastructure through Terraform
+* [ ] Automate cluster infrastructure where appropriate
+* [ ] Document infrastructure costs and teardown procedures
+
+### Phase 7 — CI/CD and Security
+
+* [ ] Build GitHub Actions workflows
+* [ ] Run automated tests during pull requests
+* [ ] Build and version container images
+* [ ] Publish images to a container registry
+* [ ] Integrate SonarQube
+* [ ] Integrate Trivy
+* [ ] Secure deployment credentials
+* [ ] Automate Kubernetes deployments
+* [ ] Verify deployments through health checks
+
+### Phase 8 — Production Readiness
+
+* [ ] Centralize application logs
+* [ ] Collect metrics and configure monitoring
+* [ ] Introduce distributed tracing
+* [ ] Configure alerting
+* [ ] Define database backup and recovery procedures
+* [ ] Perform load and failure testing
+* [ ] Review service authentication and network security
+* [ ] Test message redelivery and duplicate-event handling
+* [ ] Document operational procedures and troubleshooting
+
+---
+
+## 🎓 Engineering Goals
+
+QuickMunch is intended to demonstrate practical engineering beyond building endpoints.
+
+The project emphasizes understanding the trade-offs involved in a distributed system, including:
+
+* **Service boundaries:** Separating business capabilities without creating unnecessary microservices.
+* **Data ownership:** Keeping persistence responsibilities clear between services.
+* **Communication:** Choosing REST for request-response operations and messaging for asynchronous work.
+* **Consistency:** Managing order and payment state transitions across independent services.
+* **Reliability:** Handling retries, timeouts, duplicate messages, and partial failures.
+* **Security:** Protecting credentials, validating identity, and verifying external payment events.
+* **Deployment:** Creating repeatable container builds and controlled Kubernetes rollouts.
+* **Automation:** Using infrastructure as code and CI/CD to reduce manual operational work.
+* **Observability:** Making application behavior diagnosable through logs, metrics, and traces.
+
+These concerns will be addressed incrementally as the project moves from a working microservices backend toward a more reliable deployment.
+
+---
+
+## 📊 Current Project Status
+
+QuickMunch has progressed beyond its initial single-service stage.
+
+### Implemented foundations
+
+* User Service with authentication-related functionality
+* Restaurant Service
+* Order Service
+* RabbitMQ order-event integration
+* Notification Service consuming order-created events and sending emails
+* Containerized development environment
+
+### Major work remaining
+
+* Payment Service and provider integration
+* Stronger automated testing and distributed failure handling
+* Kubernetes deployment and Ingress
+* Terraform-managed infrastructure
+* Automated CI/CD and security scanning
+* Monitoring, observability, and operational hardening
+
+The project is under active development. Completed application features should not be confused with production deployment or operational readiness; those are separate engineering milestones.
+
+---
+
+## 📜 License
+
+No license has been specified yet. Until a license is added to the repository, the project's reuse and redistribution terms should not be assumed.
