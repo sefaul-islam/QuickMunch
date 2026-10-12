@@ -11,6 +11,7 @@ import com.example.restaurant_service.exception.DuplicateCategoryException;
 import com.example.restaurant_service.mapper.CategoryMapper;
 import com.example.restaurant_service.repository.CategoryRepository;
 import com.example.restaurant_service.repository.FoodItemRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +51,7 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
-    @org.springframework.cache.annotation.Cacheable(value = "restaurant_categories", key = "#restaurantId")
+    @Cacheable(value = "restaurant_categories", key = "#restaurantId")
     public List<CategoryResponse> getCategories(Long restaurantId) {
         restaurantService.findRestaurantOrThrow(restaurantId);
 
