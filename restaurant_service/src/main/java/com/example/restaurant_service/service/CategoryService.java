@@ -11,6 +11,7 @@ import com.example.restaurant_service.exception.DuplicateCategoryException;
 import com.example.restaurant_service.mapper.CategoryMapper;
 import com.example.restaurant_service.repository.CategoryRepository;
 import com.example.restaurant_service.repository.FoodItemRepository;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +62,7 @@ public class CategoryService {
     }
 
     @Transactional
-    @org.springframework.cache.annotation.CacheEvict(value = "restaurant_categories", key = "#restaurantId")
+    @CacheEvict(value = "restaurant_categories", key = "#restaurantId")
     public CategoryResponse updateCategory(Long restaurantId, Long categoryId,
                                             UpdateCategoryRequest request,
                                             Long authenticatedUserId) {
@@ -86,7 +87,7 @@ public class CategoryService {
     }
 
     @Transactional
-    @org.springframework.cache.annotation.CacheEvict(value = "restaurant_categories", key = "#restaurantId")
+    @CacheEvict(value = "restaurant_categories", key = "#restaurantId")
     public void deleteCategory(Long restaurantId, Long categoryId,
                                 Long authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
