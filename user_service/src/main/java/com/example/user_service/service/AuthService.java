@@ -1,5 +1,6 @@
 package com.example.user_service.service;
 
+import com.example.user_service.auth.CustomUserDetails;
 import com.example.user_service.dto.AuthResponseDTO;
 import com.example.user_service.dto.LoginRequestDTO;
 import com.example.user_service.dto.RegisterRequestDTO;
@@ -7,11 +8,15 @@ import com.example.user_service.entity.Role;
 import com.example.user_service.entity.User;
 import com.example.user_service.enums.RoleName;
 import com.example.user_service.exception.BadCredentialsException;
-import com.example.user_service.exception.DuplicateResourceException;
 import com.example.user_service.exception.ResourceNotFoundException;
+import com.example.user_service.exception.DuplicateResourceException;
 import com.example.user_service.repos.RoleRepository;
 import com.example.user_service.repos.UserRepository;
 import com.example.user_service.security.JwtService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,13 +31,16 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     public AuthService(UserRepository userRepository, RoleRepository roleRepository,
-                       PasswordEncoder passwordEncoder, JwtService jwtService) {
+                       PasswordEncoder passwordEncoder, JwtService jwtService,
+                       AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
     }
 
     @Transactional
@@ -69,31 +77,26 @@ public class AuthService {
         return new AuthResponseDTO(token, savedUser.getId(), savedUser.getEmail(), roles, refreshToken);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public AuthResponseDTO login(LoginRequestDTO dto) {
-        User user = userRepository.findByEmail(dto.email())
-                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(dto.email(), dto.password())
+            );
 
-        if (user.getPassword() == null) {
-            throw new BadCredentialsException("This account uses Google login");
-        }
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        if (!passwordEncoder.matches(dto.password(), user.getPassword())) {
+            Set<String> roles = userDetails.getAuthorities().stream()
+                    .map(a -> a.getAuthority())
+                    .collect(Collectors.toSet());
+
+            String token = jwtService.generateToken(userDetails.getUserId(), userDetails.getEmail(), roles);
+            String refreshToken = jwtService.generateRefreshToken(userDetails.getUserId(), userDetails.getEmail());
+
+            return new AuthResponseDTO(token, userDetails.getUserId(), userDetails.getEmail(), roles, refreshToken);
+        } catch (AuthenticationException ex) {
             throw new BadCredentialsException("Invalid email or password");
         }
-
-        if (!user.getIsActive()) {
-            throw new ResourceNotFoundException("User is not active");
-        }
-
-        Set<String> roles = user.getRoles().stream()
-                .map(r -> r.getName().name())
-                .collect(Collectors.toSet());
-
-        String token = jwtService.generateToken(user.getId(), user.getEmail(), roles);
-        String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getEmail());
-
-        return new AuthResponseDTO(token, user.getId(), user.getEmail(), roles, refreshToken);
     }
 
     @Transactional

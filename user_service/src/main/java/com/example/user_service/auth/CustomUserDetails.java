@@ -7,7 +7,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class CustomUserDetails implements UserDetails {
@@ -18,10 +17,14 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
+    public Long getUserId() {
+        return user.getId();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
-        user.getRoles().forEach(role->{
+        user.getRoles().forEach(role -> {
             authorities.add(() -> role.getName().name());
         });
         return authorities;
@@ -37,7 +40,17 @@ public class CustomUserDetails implements UserDetails {
         return user.getEmail();
     }
 
-    public String getEmail(){
+    public String getEmail() {
         return user.getEmail();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return Boolean.TRUE.equals(user.getIsActive());
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return Boolean.TRUE.equals(user.getIsActive());
     }
 }
