@@ -27,7 +27,7 @@ class UserRepositoryTest {
         testUser.setEmail("test@example.com");
         testUser.setFirstName("Test");
         testUser.setLastName("User");
-        testUser.setGoogleId("google-abc-123");
+        testUser.setKeycloakId("kc-abc-123");
         testUser.setProfilePictureUrl("https://example.com/pic.jpg");
         testUser = userRepository.save(testUser);
     }
@@ -51,19 +51,19 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Should find user by Google ID")
-    void findByGoogleId_existingId_returnsUser() {
-        Optional<User> found = userRepository.findByGoogleId("google-abc-123");
+    @DisplayName("Should find user by Keycloak ID")
+    void findByKeycloakId_existingId_returnsUser() {
+        Optional<User> found = userRepository.findByKeycloakId("kc-abc-123");
 
         assertTrue(found.isPresent());
         assertEquals("test@example.com", found.get().getEmail());
-        assertEquals("google-abc-123", found.get().getGoogleId());
+        assertEquals("kc-abc-123", found.get().getKeycloakId());
     }
 
     @Test
-    @DisplayName("Should return empty for non-existing Google ID")
-    void findByGoogleId_nonExistingId_returnsEmpty() {
-        Optional<User> found = userRepository.findByGoogleId("google-xyz-999");
+    @DisplayName("Should return empty for non-existing Keycloak ID")
+    void findByKeycloakId_nonExistingId_returnsEmpty() {
+        Optional<User> found = userRepository.findByKeycloakId("kc-xyz-999");
 
         assertFalse(found.isPresent());
     }
@@ -94,11 +94,11 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Should enforce unique googleId constraint")
-    void save_duplicateGoogleId_throwsException() {
+    @DisplayName("Should enforce unique keycloakId constraint")
+    void save_duplicateKeycloakId_throwsException() {
         User duplicate = new User();
         duplicate.setEmail("other@example.com");
-        duplicate.setGoogleId("google-abc-123"); // same as testUser
+        duplicate.setKeycloakId("kc-abc-123"); // same as testUser
 
         assertThrows(Exception.class, () -> {
             userRepository.save(duplicate);

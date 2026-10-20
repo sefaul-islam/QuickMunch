@@ -16,19 +16,14 @@ spring:
 
   security:
     oauth2:
-      client:
-        registration:
-          google:
-            client-id: test-client-id
-            client-secret: test-client-secret
-            scope:
-              - openid
-              - profile
-              - email
-
-jwt:
-  secret: test-secret-key-for-jwt-testing-purposes-only-must-be-long-enough
-  expiration: 86400000
+      resourceserver:
+        jwt:
+          # Use a static public key for tests (avoids needing a running Keycloak)
+          # Tests should use @MockBean JwtDecoder or spring-security-test JWT support
+          issuer-uri: http://localhost:8180/realms/quickmunch
 
 server:
   port: 8081
+
+cors:
+  allowed-origins: http://localhost:3000

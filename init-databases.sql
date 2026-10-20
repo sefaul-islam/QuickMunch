@@ -5,3 +5,4 @@
 CREATE DATABASE quickmunchdb;
 CREATE DATABASE quickmunch_restaurants;
 CREATE DATABASE quickmunch_orders;
+CREATE DATABASE keycloakdb;

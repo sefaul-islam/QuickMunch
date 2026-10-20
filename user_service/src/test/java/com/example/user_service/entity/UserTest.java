@@ -14,18 +14,16 @@ class UserTest {
                 .firstName("John")
                 .lastName("Doe")
                 .email("john@example.com")
-                .password("secret123")
                 .phoneNumber("01712345678")
-                .googleId("google-123")
+                .keycloakId("kc-123")
                 .profilePictureUrl("https://example.com/pic.jpg")
                 .build();
 
         assertEquals("John", user.getFirstName());
         assertEquals("Doe", user.getLastName());
         assertEquals("john@example.com", user.getEmail());
-        assertEquals("secret123", user.getPassword());
         assertEquals("01712345678", user.getPhoneNumber());
-        assertEquals("google-123", user.getGoogleId());
+        assertEquals("kc-123", user.getKeycloakId());
         assertEquals("https://example.com/pic.jpg", user.getProfilePictureUrl());
         assertTrue(user.getIsActive()); // default
         assertNotNull(user.getRoles()); // default empty set
@@ -39,13 +37,13 @@ class UserTest {
         user.setFirstName("Jane");
         user.setLastName("Smith");
         user.setEmail("jane@example.com");
-        user.setGoogleId("google-456");
+        user.setKeycloakId("kc-456");
         user.setProfilePictureUrl("https://example.com/jane.jpg");
 
         assertEquals("Jane", user.getFirstName());
         assertEquals("Smith", user.getLastName());
         assertEquals("jane@example.com", user.getEmail());
-        assertEquals("google-456", user.getGoogleId());
+        assertEquals("kc-456", user.getKeycloakId());
         assertEquals("https://example.com/jane.jpg", user.getProfilePictureUrl());
     }
 
@@ -59,9 +57,8 @@ class UserTest {
         assertEquals("minimal@example.com", user.getEmail());
         assertNull(user.getFirstName());
         assertNull(user.getLastName());
-        assertNull(user.getPassword());
         assertNull(user.getPhoneNumber());
-        assertNull(user.getGoogleId());
+        assertNull(user.getKeycloakId());
         assertNull(user.getProfilePictureUrl());
         assertTrue(user.getIsActive());
     }

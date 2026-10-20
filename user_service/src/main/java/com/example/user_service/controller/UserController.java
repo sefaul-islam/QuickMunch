@@ -3,7 +3,9 @@ package com.example.user_service.controller;
 import com.example.user_service.dto.PublicUserProfileDTO;
 import com.example.user_service.dto.UpdateUserRequestDTO;
 import com.example.user_service.dto.UserProfileResponseDTO;
+import com.example.user_service.security.KeycloakSecurityUtil;
 import com.example.user_service.service.UserService;
+import com.example.user_service.service.UserSyncService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,17 +16,20 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final UserSyncService userSyncService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserSyncService userSyncService) {
         this.userService = userService;
+        this.userSyncService = userSyncService;
     }
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponseDTO> getCurrentUser(
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        UserProfileResponseDTO user = userService.getUserById(userId);
-        return ResponseEntity.ok(user);
+        // Ensure local user record exists (just-in-time provisioning)
+        var user = userSyncService.syncUser(authentication);
+        UserProfileResponseDTO profile = userService.getUserById(user.getId());
+        return ResponseEntity.ok(profile);
     }
 
     @GetMapping("/{userId}")
@@ -39,7 +44,7 @@ public class UserController {
             @PathVariable("userId") Long userId,
             @Valid @RequestBody UpdateUserRequestDTO dto,
             Authentication authentication) {
-        String authenticatedEmail = (String) authentication.getCredentials();
+        String authenticatedEmail = KeycloakSecurityUtil.getEmail(authentication);
         UserProfileResponseDTO updated = userService.updateUser(
                 userId, dto, authenticatedEmail);
         return ResponseEntity.ok(updated);
@@ -49,7 +54,7 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(
             @PathVariable("userId") Long userId,
             Authentication authentication) {
-        String authenticatedEmail = (String) authentication.getCredentials();
+        String authenticatedEmail = KeycloakSecurityUtil.getEmail(authentication);
         userService.deleteUser(userId, authenticatedEmail);
         return ResponseEntity.noContent().build();
     }

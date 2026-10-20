@@ -2,6 +2,7 @@ package com.example.user_service.controller;
 
 import com.example.user_service.dto.AddressRequestDTO;
 import com.example.user_service.dto.AddressResponseDTO;
+import com.example.user_service.security.KeycloakSecurityUtil;
 import com.example.user_service.service.AddressService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class AddressController {
             @PathVariable("userId") Long userId,
             @Valid @RequestBody AddressRequestDTO requestDTO,
             Authentication authentication) {
-        String authenticatedEmail = (String) authentication.getCredentials();
+        String authenticatedEmail = KeycloakSecurityUtil.getEmail(authentication);
         AddressResponseDTO address = addressService.createAddress(
                 userId, requestDTO, authenticatedEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(address);
@@ -36,7 +37,7 @@ public class AddressController {
     public ResponseEntity<List<AddressResponseDTO>> getAddresses(
             @PathVariable("userId") Long userId,
             Authentication authentication) {
-        String authenticatedEmail = (String) authentication.getCredentials();
+        String authenticatedEmail = KeycloakSecurityUtil.getEmail(authentication);
         List<AddressResponseDTO> addresses = addressService.getAddressesByUserId(userId, authenticatedEmail);
         return ResponseEntity.ok(addresses);
     }
@@ -46,7 +47,7 @@ public class AddressController {
             @PathVariable("userId") Long userId,
             @PathVariable("addressId") Long addressId,
             Authentication authentication) {
-        String authenticatedEmail = (String) authentication.getCredentials();
+        String authenticatedEmail = KeycloakSecurityUtil.getEmail(authentication);
         AddressResponseDTO address = addressService.getAddress(userId, addressId, authenticatedEmail);
         return ResponseEntity.ok(address);
     }
@@ -57,7 +58,7 @@ public class AddressController {
             @PathVariable("addressId") Long addressId,
             @Valid @RequestBody AddressRequestDTO requestDTO,
             Authentication authentication) {
-        String authenticatedEmail = (String) authentication.getCredentials();
+        String authenticatedEmail = KeycloakSecurityUtil.getEmail(authentication);
         AddressResponseDTO address = addressService.updateAddress(
                 userId, addressId, requestDTO, authenticatedEmail);
         return ResponseEntity.ok(address);
@@ -68,7 +69,7 @@ public class AddressController {
             @PathVariable("userId") Long userId,
             @PathVariable("addressId") Long addressId,
             Authentication authentication) {
-        String authenticatedEmail = (String) authentication.getCredentials();
+        String authenticatedEmail = KeycloakSecurityUtil.getEmail(authentication);
         addressService.deleteAddress(userId, addressId, authenticatedEmail);
         return ResponseEntity.noContent().build();
     }

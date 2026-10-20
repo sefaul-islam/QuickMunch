@@ -49,8 +49,6 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    private String password;
-
     @Column(unique = true, length = 15)
     private String phoneNumber;
 
@@ -60,7 +58,7 @@ public class User {
     private List<Address> addresses = new ArrayList<>();
 
     @Column(unique = true)
-    private String googleId;
+    private String keycloakId;
 
     private String profilePictureUrl;
 

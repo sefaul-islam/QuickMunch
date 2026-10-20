@@ -53,6 +53,32 @@ services:
     networks:
       - quickmunch-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: quickmunch-keycloak
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloakdb
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+      KC_HTTP_PORT: 8080
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - quickmunch-network
+
   # ──────────────────────────── Application Services ────────────────────────────
 
   user-service:
@@ -68,11 +94,12 @@ services:
       DB_NAME: quickmunchdb
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
-      JWT_SECRET: f4a8b2c9d1e6f3a7b5c0d2e8f1a4b7c9d3e6f0a2b5c8d1e4f7a0b3c6d9e2f5
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-placeholder}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-placeholder}
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/quickmunch
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/quickmunch/protocol/openid-connect/certs
     depends_on:
       postgres:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     networks:
       - quickmunch-network
