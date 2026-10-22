@@ -8,6 +8,7 @@ import com.example.user_service.service.UserService;
 import com.example.user_service.service.UserSyncService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasRole('ROLE_RESTAURANT_OWNER') ")
     public ResponseEntity<UserProfileResponseDTO> getCurrentUser(
             Authentication authentication) {
         // Ensure local user record exists (just-in-time provisioning)
