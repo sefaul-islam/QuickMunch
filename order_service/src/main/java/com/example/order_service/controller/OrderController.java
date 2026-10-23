@@ -3,7 +3,6 @@ package com.example.order_service.controller;
 import com.example.order_service.dto.CreateOrderDTO;
 import com.example.order_service.dto.OrderConfirmationResponse;
 import com.example.order_service.dto.OrderStatusUpdateDTO;
-import com.example.order_service.security.AuthenticatedUser;
 import com.example.order_service.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

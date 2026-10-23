@@ -25,7 +25,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('ROLE_RESTAURANT_OWNER') ")
+    @PreAuthorize("hasRole('ROLE_CUSTOMER') ")
     public ResponseEntity<UserProfileResponseDTO> getCurrentUser(
             Authentication authentication) {
         // Ensure local user record exists (just-in-time provisioning)
