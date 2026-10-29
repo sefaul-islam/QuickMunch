@@ -3,6 +3,7 @@ package com.example.restaurant_service.controller;
 import com.example.restaurant_service.dto.request.CreateCategoryRequest;
 import com.example.restaurant_service.dto.request.UpdateCategoryRequest;
 import com.example.restaurant_service.dto.response.CategoryResponse;
+import com.example.restaurant_service.security.KeycloakSecurityUtil;
 import com.example.restaurant_service.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class CategoryController {
             @PathVariable Long restaurantId,
             @Valid @RequestBody CreateCategoryRequest request,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         CategoryResponse response = categoryService.createCategory(
                 restaurantId, request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -45,7 +46,7 @@ public class CategoryController {
             @PathVariable Long categoryId,
             @Valid @RequestBody UpdateCategoryRequest request,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         return ResponseEntity.ok(
                 categoryService.updateCategory(
                         restaurantId, categoryId, request, userId));
@@ -56,7 +57,7 @@ public class CategoryController {
             @PathVariable Long restaurantId,
             @PathVariable Long categoryId,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         categoryService.deleteCategory(restaurantId, categoryId, userId);
         return ResponseEntity.noContent().build();
     }

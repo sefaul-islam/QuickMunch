@@ -33,7 +33,7 @@ public class RestaurantService {
 
     @Transactional
     public RestaurantResponse createRestaurant(CreateRestaurantRequest request,
-                                                Long ownerId) {
+                                                String ownerId) {
         Restaurant restaurant = RestaurantMapper.toEntity(request, ownerId);
         Restaurant saved = restaurantRepository.save(restaurant);
         return RestaurantMapper.toResponse(saved);
@@ -54,7 +54,7 @@ public class RestaurantService {
     }
 
     @Transactional(readOnly = true)
-    public List<RestaurantResponse> getRestaurantsByOwner(Long ownerId) {
+    public List<RestaurantResponse> getRestaurantsByOwner(String ownerId) {
         return restaurantRepository.findByOwnerId(ownerId).stream()
                 .map(RestaurantMapper::toResponse)
                 .toList();
@@ -64,7 +64,7 @@ public class RestaurantService {
     @org.springframework.cache.annotation.CacheEvict(value = "restaurants", key = "#id")
     public RestaurantResponse updateRestaurant(Long id,
                                                 UpdateRestaurantRequest request,
-                                                Long authenticatedUserId) {
+                                                String authenticatedUserId) {
         Restaurant restaurant = findRestaurantOrThrow(id);
         verifyOwnership(restaurant, authenticatedUserId);
 
@@ -80,7 +80,7 @@ public class RestaurantService {
 
     @Transactional
     @org.springframework.cache.annotation.CacheEvict(value = "restaurants", key = "#id")
-    public void deleteRestaurant(Long id, Long authenticatedUserId) {
+    public void deleteRestaurant(Long id, String authenticatedUserId) {
         Restaurant restaurant = findRestaurantOrThrow(id);
         verifyOwnership(restaurant, authenticatedUserId);
 
@@ -97,7 +97,7 @@ public class RestaurantService {
     @Transactional
     @org.springframework.cache.annotation.CacheEvict(value = "restaurants", key = "#id")
     public RestaurantResponse updateStatus(Long id, Boolean isOpen,
-                                            Long authenticatedUserId) {
+                                            String authenticatedUserId) {
         Restaurant restaurant = findRestaurantOrThrow(id);
         verifyOwnership(restaurant, authenticatedUserId);
 
@@ -111,7 +111,7 @@ public class RestaurantService {
                 .orElseThrow(() -> new RestaurantNotFoundException(id));
     }
 
-    public void verifyOwnership(Restaurant restaurant, Long authenticatedUserId) {
+    public void verifyOwnership(Restaurant restaurant, String authenticatedUserId) {
         if (!restaurant.getOwnerId().equals(authenticatedUserId)) {
             throw new RestaurantOwnershipException(restaurant.getId());
         }

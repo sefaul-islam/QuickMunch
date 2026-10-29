@@ -33,7 +33,7 @@ public class FoodItemService {
     @org.springframework.cache.annotation.CacheEvict(value = "restaurant_foods", key = "#restaurantId")
     public FoodItemResponse createFoodItem(Long restaurantId,
                                             CreateFoodItemRequest request,
-                                            Long authenticatedUserId) {
+                                            String authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
         restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
@@ -70,7 +70,7 @@ public class FoodItemService {
     })
     public FoodItemResponse updateFoodItem(Long restaurantId, Long foodId,
                                             UpdateFoodItemRequest request,
-                                            Long authenticatedUserId) {
+                                            String authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
         restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
@@ -94,7 +94,7 @@ public class FoodItemService {
         @org.springframework.cache.annotation.CacheEvict(value = "restaurant_food", key = "#restaurantId + '_' + #foodId")
     })
     public void deleteFoodItem(Long restaurantId, Long foodId,
-                                Long authenticatedUserId) {
+                                String authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
         restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
@@ -109,7 +109,7 @@ public class FoodItemService {
     })
     public FoodItemResponse updateAvailability(Long restaurantId, Long foodId,
                                                 Boolean isAvailable,
-                                                Long authenticatedUserId) {
+                                                String authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
         restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 

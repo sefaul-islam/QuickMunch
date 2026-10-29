@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record RestaurantResponse(
         Long id,
-        Long ownerId,
+        String ownerId,
         String name,
         String description,
         String phoneNumber,

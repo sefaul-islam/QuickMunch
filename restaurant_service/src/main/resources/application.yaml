@@ -18,6 +18,13 @@ spring:
      hibernate:
       format_sql: true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/quickmunch}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/quickmunch/protocol/openid-connect/certs}
+
 user-service:
   base-url: ${USER_SERVICE_URL:http://localhost:8081}
 management:
@@ -28,5 +35,5 @@ management:
 server:
   port: 8082
 
-jwt:
-  secret: ${JWT_SECRET:f4a8b2c9d1e6f3a7b5c0d2e8f1a4b7c9d3e6f0a2b5c8d1e4f7a0b3c6d9e2f5}
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000}

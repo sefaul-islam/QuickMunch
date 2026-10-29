@@ -3,6 +3,7 @@ package com.example.restaurant_service.controller;
 import com.example.restaurant_service.dto.request.CreateRestaurantRequest;
 import com.example.restaurant_service.dto.request.UpdateRestaurantRequest;
 import com.example.restaurant_service.dto.response.RestaurantResponse;
+import com.example.restaurant_service.security.KeycloakSecurityUtil;
 import com.example.restaurant_service.service.RestaurantService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class RestaurantController {
     public ResponseEntity<RestaurantResponse> createRestaurant(
             @Valid @RequestBody CreateRestaurantRequest request,
             Authentication authentication) {
-        Long ownerId = (Long) authentication.getPrincipal();
+        String ownerId = KeycloakSecurityUtil.getKeycloakId(authentication);
         RestaurantResponse response = restaurantService.createRestaurant(
                 request, ownerId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -46,14 +47,14 @@ public class RestaurantController {
 
     @GetMapping("/owner/{ownerId}")
     public ResponseEntity<List<RestaurantResponse>> getRestaurantsByOwner(
-            @PathVariable Long ownerId) {
+            @PathVariable String ownerId) {
         return ResponseEntity.ok(restaurantService.getRestaurantsByOwner(ownerId));
     }
 
     @GetMapping("/my")
     public ResponseEntity<List<RestaurantResponse>> getMyRestaurants(
             Authentication authentication) {
-        Long ownerId = (Long) authentication.getPrincipal();
+        String ownerId = KeycloakSecurityUtil.getKeycloakId(authentication);
         return ResponseEntity.ok(restaurantService.getRestaurantsByOwner(ownerId));
     }
 
@@ -62,7 +63,7 @@ public class RestaurantController {
             @PathVariable Long restaurantId,
             @Valid @RequestBody UpdateRestaurantRequest request,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         return ResponseEntity.ok(
                 restaurantService.updateRestaurant(restaurantId, request, userId));
     }
@@ -71,7 +72,7 @@ public class RestaurantController {
     public ResponseEntity<Void> deleteRestaurant(
             @PathVariable Long restaurantId,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         restaurantService.deleteRestaurant(restaurantId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -81,7 +82,7 @@ public class RestaurantController {
             @PathVariable Long restaurantId,
             @RequestBody Map<String, Boolean> request,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         Boolean isOpen = request.get("isOpen");
         if (isOpen == null) {
             throw new IllegalArgumentException("'isOpen' field is required");

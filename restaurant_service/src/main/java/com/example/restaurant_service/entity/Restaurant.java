@@ -34,7 +34,7 @@ public class Restaurant {
     private Long id;
 
     @Column(name = "owner_id", nullable = false)
-    private Long ownerId;
+    private String ownerId;
 
     @Column(nullable = false, length = 100)
     private String name;

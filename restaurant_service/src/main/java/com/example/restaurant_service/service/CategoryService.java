@@ -37,7 +37,7 @@ public class CategoryService {
     @org.springframework.cache.annotation.CacheEvict(value = "restaurant_categories", key = "#restaurantId")
     public CategoryResponse createCategory(Long restaurantId,
                                             CreateCategoryRequest request,
-                                            Long authenticatedUserId) {
+                                            String authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
         restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
@@ -65,7 +65,7 @@ public class CategoryService {
     @CacheEvict(value = "restaurant_categories", key = "#restaurantId")
     public CategoryResponse updateCategory(Long restaurantId, Long categoryId,
                                             UpdateCategoryRequest request,
-                                            Long authenticatedUserId) {
+                                            String authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
         restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 
@@ -89,7 +89,7 @@ public class CategoryService {
     @Transactional
     @CacheEvict(value = "restaurant_categories", key = "#restaurantId")
     public void deleteCategory(Long restaurantId, Long categoryId,
-                                Long authenticatedUserId) {
+                                String authenticatedUserId) {
         Restaurant restaurant = restaurantService.findRestaurantOrThrow(restaurantId);
         restaurantService.verifyOwnership(restaurant, authenticatedUserId);
 

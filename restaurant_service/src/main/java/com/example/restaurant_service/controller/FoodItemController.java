@@ -3,6 +3,7 @@ package com.example.restaurant_service.controller;
 import com.example.restaurant_service.dto.request.CreateFoodItemRequest;
 import com.example.restaurant_service.dto.request.UpdateFoodItemRequest;
 import com.example.restaurant_service.dto.response.FoodItemResponse;
+import com.example.restaurant_service.security.KeycloakSecurityUtil;
 import com.example.restaurant_service.service.FoodItemService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -28,7 +29,7 @@ public class FoodItemController {
             @PathVariable Long restaurantId,
             @Valid @RequestBody CreateFoodItemRequest request,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         FoodItemResponse response = foodItemService.createFoodItem(
                 restaurantId, request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -54,7 +55,7 @@ public class FoodItemController {
             @PathVariable Long foodId,
             @Valid @RequestBody UpdateFoodItemRequest request,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         return ResponseEntity.ok(
                 foodItemService.updateFoodItem(
                         restaurantId, foodId, request, userId));
@@ -65,7 +66,7 @@ public class FoodItemController {
             @PathVariable Long restaurantId,
             @PathVariable Long foodId,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         foodItemService.deleteFoodItem(restaurantId, foodId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -76,7 +77,7 @@ public class FoodItemController {
             @PathVariable Long foodId,
             @RequestBody Map<String, Boolean> request,
             Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        String userId = KeycloakSecurityUtil.getKeycloakId(authentication);
         Boolean isAvailable = request.get("isAvailable");
         if (isAvailable == null) {
             throw new IllegalArgumentException("'isAvailable' field is required");

@@ -9,7 +9,7 @@ public final class RestaurantMapper {
     private RestaurantMapper() {
     }
 
-    public static Restaurant toEntity(CreateRestaurantRequest request, Long ownerId) {
+    public static Restaurant toEntity(CreateRestaurantRequest request, String ownerId) {
         return Restaurant.builder()
                 .ownerId(ownerId)
                 .name(request.name())
