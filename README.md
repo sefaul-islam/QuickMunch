@@ -8,7 +8,7 @@ The project explores service-to-service communication, asynchronous event proces
 
 **Project Status: Active Development**
 
-The core User, Restaurant, and Order Services have been implemented, alongside RabbitMQ-based event communication with the Notification Service. Payment processing, comprehensive testing, Kubernetes deployment, infrastructure automation, and production-readiness improvements remain on the roadmap.
+The User, Restaurant, and Order Services are implemented, and the Order Service is integrated with the Notification Service through RabbitMQ. Authentication is being consolidated around Keycloak and Spring Security OAuth2 Resource Server. The current major focus is to finish and verify the Keycloak integration, then implement a reliable Payment Service using SSLCommerz. Kubernetes deployment, Terraform automation, CI/CD, and broader production hardening remain planned.
 
 ---
 
@@ -27,6 +27,7 @@ The core User, Restaurant, and Order Services have been implemented, alongside R
 * [Project Structure](#-project-structure)
 * [Getting Started](#-getting-started)
 * [Development Roadmap](#-development-roadmap)
+* [Immediate Development Focus](#-immediate-development-focus)
 * [Engineering Goals](#-engineering-goals)
 * [License](#-license)
 
@@ -42,8 +43,8 @@ The platform is being developed around independent services responsible for diff
 
 Planned functionality includes:
 
-* User registration and authentication
-* Google OAuth2 login
+* User profiles and authentication through Keycloak
+* Role-based authorization using Keycloak JWT claims
 * Restaurant and food management
 * Order creation and lifecycle management
 * Payment processing
@@ -60,7 +61,7 @@ The project explores:
 * Asynchronous messaging with RabbitMQ
 * Independent service containerization
 * PostgreSQL persistence
-* Spring Security and JWT authentication
+* Keycloak-based authentication and JWT validation with Spring Security OAuth2 Resource Server
 * Infrastructure provisioning with Terraform
 * Kubernetes orchestration using kubeadm
 * CI/CD automation with GitHub Actions
@@ -119,7 +120,8 @@ The following diagram represents the current architectural direction. Components
 
                                             ┌──────────────────┐
                                             │  Payment Service │
-                                            │     (Planned)    │
+                                            │ (Planned:       │
+                                            │  SSLCommerz)    │
                                             └──────────────────┘
 ```
 
@@ -140,7 +142,7 @@ The architecture will evolve as additional services and infrastructure are imple
 
 | Service              | Responsibility                                      | Status                        |
 | -------------------- | --------------------------------------------------- | ----------------------------- |
-| User Service         | Authentication, users, profiles, Google OAuth2      | Implemented                   |
+| User Service         | User profiles and Keycloak-backed API authentication | Implemented; Keycloak hardening in progress |
 | Restaurant Service   | Restaurant management and related data              | Implemented                   |
 | Order Service        | Order creation, validation, persistence, and events | Implemented                   |
 | Notification Service | Order-event consumption and email delivery          | Integrated; hardening planned |
@@ -158,11 +160,14 @@ The User Service handles user-related operations and provides the foundation for
 Current technologies and capabilities include:
 
 * Java and Spring Boot
-* Spring Security
-* Spring Data JPA and PostgreSQL
-* Google OAuth2 login and user persistence
-* JWT-based request authentication
+* Spring Security OAuth2 Resource Server
+* Keycloak as the identity provider
+* JWT bearer-token validation using the configured issuer and Keycloak JWK set
+* Conversion of Keycloak realm roles into Spring Security authorities (for example, `ROLE_CUSTOMER`)
+* Spring Data JPA and PostgreSQL for application user/profile data
 * User profile and account information
+
+The authentication migration is replacing the earlier custom JWT / direct Google OAuth2 approach. The remaining work is to finish authorization rules, verify role mappings across services, and settle the user-profile synchronization strategy.
 
 ### Restaurant Service
 
@@ -205,21 +210,25 @@ The service keeps notification processing outside the synchronous order-creation
 
 Future improvements include retries, duplicate-event protection, dead-letter queues, and delivery tracking.
 
-### Payment Service — Planned
+### Payment Service — Planned (SSLCommerz)
 
-The Payment Service will handle payment operations independently of the Order Service.
+The Payment Service is the next major backend capability. The current plan is to integrate **SSLCommerz** as the payment gateway, while keeping the gateway-specific implementation behind a provider integration layer.
 
 Planned responsibilities include:
 
-* Payment initiation and transaction records
-* Integration with a payment provider
-* Payment status tracking
-* Secure callback and webhook verification
-* Idempotent payment processing
-* Payment success and failure events
-* Integration with the order lifecycle
+* Create and track payment attempts independently of order records
+* Verify order ownership and retrieve the authoritative payable amount from the Order Service
+* Initiate SSLCommerz hosted checkout sessions
+* Handle success, failure, cancellation callbacks, and IPN notifications
+* Validate transactions server-to-server using the SSLCommerz Order Validation API
+* Implement API idempotency and duplicate-notification protection
+* Track transaction identifiers and payment state transitions
+* Publish payment outcome events through RabbitMQ
+* Use a transactional outbox to avoid losing events after a database commit
+* Support reconciliation for timeouts and uncertain gateway responses
+* Add refund handling after the core payment lifecycle is reliable
 
-Payment status will be based on verified server-side provider responses rather than client-submitted success messages. The payment provider and final integration workflow have not yet been selected.
+The browser redirect will not be treated as proof of payment. A payment will be marked successful only after server-side gateway validation confirms the transaction, amount, and currency.
 
 ---
 
@@ -300,12 +309,14 @@ The exchange and routing-key conventions establish the messaging structure for a
 
 Security is an important part of QuickMunch's backend design.
 
-The User Service provides the foundation for authentication using Spring Security, Google OAuth2, and JWT-based request validation.
+Keycloak is being used as the identity provider. Services are being configured as OAuth2 Resource Servers so Spring Security can validate bearer JWTs using Keycloak's issuer metadata/JWK endpoint. Keycloak realm roles are mapped into Spring Security authorities for role-based authorization.
 
 The broader security roadmap includes:
 
-* Consistent authentication and authorization across protected APIs
-* Secure JWT signing and verification
+* Complete and verify Keycloak authentication across protected services
+* Consistent authorization and role mapping across services
+* Decide how local application user/profile records are created or synchronized from the Keycloak subject (`sub`)
+* Secure JWT validation and issuer configuration
 * Role-based authorization where required
 * Environment-based configuration for credentials
 * Secret management for database, messaging, and email credentials
@@ -332,8 +343,9 @@ Docker Compose Environment
 ├── Restaurant Service
 ├── Order Service
 ├── Notification Service
-├── PostgreSQL
-└── RabbitMQ
+├── PostgreSQL 17 (service databases)
+├── RabbitMQ 4 (management image)
+└── Keycloak (authentication provider; local setup/configuration)
 ```
 
 The exact services and configurations depend on the current Compose file.
@@ -451,12 +463,13 @@ The workflow describes the target pipeline. Individual stages should be marked c
 | ---------------------- | ---------------------------------------- |
 | Language               | Java                                     |
 | Backend Framework      | Spring Boot                              |
-| Security               | Spring Security, JWT, OAuth2             |
+| Identity and Security  | Keycloak, Spring Security OAuth2 Resource Server, JWT |
 | Persistence            | Spring Data JPA, Hibernate               |
 | Database               | PostgreSQL                               |
 | API Communication      | REST APIs                                |
 | Messaging              | RabbitMQ                                 |
 | Email                  | Spring `JavaMailSender`                  |
+| Payment Gateway        | SSLCommerz — planned                     |
 | Containerization       | Docker, Docker Compose                   |
 | Orchestration          | Kubernetes, kubeadm                      |
 | Service Discovery      | Kubernetes Services and DNS              |
@@ -560,10 +573,8 @@ RABBITMQ_PORT
 RABBITMQ_USERNAME
 RABBITMQ_PASSWORD
 
-JWT_SECRET
-
-GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET
+KEYCLOAK_ISSUER_URI
+KEYCLOAK_JWK_SET_URI
 
 MAIL_HOST
 MAIL_PORT
@@ -612,11 +623,15 @@ mvn spring-boot:run
 
 Make sure the service's required database, messaging infrastructure, and environment variables are configured before starting it.
 
-### 5. Configure authentication
+### 5. Configure Keycloak authentication
 
-Google OAuth2 login requires valid Google OAuth client credentials and an authorized redirect URI matching the application's configuration.
+Configure the Keycloak realm, clients, users, and roles required by the application. Each Spring Boot resource server must use the correct Keycloak issuer URI (and, where explicitly configured, the corresponding JWK Set URI). The local issuer commonly follows this pattern:
 
-JWT signing configuration must also be supplied securely. Do not use example credentials or development secrets in a production deployment.
+```text
+http://localhost:8080/realms/<realm-name>
+```
+
+Use the actual realm and deployment URL from your environment. Do not hardcode production URLs or commit client secrets and other credentials.
 
 **Note:** Exact service ports, API endpoints, Compose commands, and environment-variable names should be documented from the current implementation rather than assumed from this overview.
 
@@ -626,17 +641,30 @@ JWT signing configuration must also be supplied securely. Do not use example cre
 
 ### Phase 1 — Core Backend Services
 
-* [x] Implement User Service
+* [x] Implement User Service foundation and user/profile persistence
 * [x] Implement Restaurant Service
 * [x] Implement Order Service
 * [x] Implement Notification Service foundation
 * [x] Integrate RabbitMQ with the order workflow
-* [x] Establish asynchronous order-event consumption
+* [x] Establish order-created event consumption and email delivery
+* [x] Run the core services with PostgreSQL and RabbitMQ in the local containerized environment
 * [ ] Expand automated test coverage across services
 * [ ] Standardize validation and error responses
 * [ ] Document service APIs and configuration
 
-### Phase 2 — Reliable Distributed Communication
+### Phase 2 — Authentication and Authorization (Current Priority)
+
+* [x] Set up Keycloak realm and create test users
+* [x] Configure Spring Security OAuth2 Resource Server to validate Keycloak JWTs
+* [x] Configure issuer/JWK-based token verification
+* [x] Implement Keycloak realm-role to Spring Security authority conversion
+* [ ] Finalize authorization rules and test customer / restaurant-owner / delivery roles
+* [ ] Apply and verify consistent JWT validation in every protected service
+* [ ] Decide and implement just-in-time local user creation/profile synchronization using the Keycloak `sub` claim
+* [ ] Verify service-to-service authentication for trusted internal calls
+* [ ] Remove obsolete custom JWT / Google OAuth2 authentication code where no longer needed
+
+### Phase 3 — Reliable Distributed Communication
 
 * [x] Establish synchronous REST communication between core services
 * [x] Configure order exchange and routing-key conventions
@@ -647,19 +675,25 @@ JWT signing configuration must also be supplied securely. Do not use example cre
 * [ ] Improve timeout and downstream-failure handling
 * [ ] Evaluate the transactional outbox pattern for reliable event publication
 
-### Phase 3 — Payment Processing
+### Phase 4 — Payment Processing (Next Major Feature)
 
-* [ ] Define payment domain and transaction lifecycle
-* [ ] Implement Payment Service
-* [ ] Select a suitable payment provider
-* [ ] Integrate payment initiation and verification
-* [ ] Validate provider callbacks or webhooks
-* [ ] Implement idempotency and duplicate-request protection
-* [ ] Publish payment outcome events
-* [ ] Define order and payment state transitions
-* [ ] Test failed, pending, duplicated, and successful payment scenarios
+* [ ] Define payment entities, transaction attempts, and payment state machine
+* [ ] Create the Payment Service and PostgreSQL schema
+* [ ] Implement secure order lookup/ownership and authoritative amount verification
+* [ ] Integrate SSLCommerz sandbox session initiation and hosted checkout
+* [ ] Implement success, failure, and cancellation return endpoints
+* [ ] Implement the IPN endpoint and server-side transaction validation
+* [ ] Verify transaction ID, amount, currency, and gateway validation status
+* [ ] Add idempotency keys for payment initiation
+* [ ] Protect against duplicate IPN/callback processing and concurrent payment attempts
+* [ ] Model pending, successful, failed, cancelled, and unknown outcomes safely
+* [ ] Publish payment events through RabbitMQ
+* [ ] Implement the transactional outbox and idempotent event consumption
+* [ ] Add reconciliation for uncertain/time-out transactions
+* [ ] Add refund support after the primary flow is tested
+* [ ] Test successful, failed, cancelled, duplicated, delayed, and interrupted payment scenarios
 
-### Phase 4 — Containerization and Local Infrastructure
+### Phase 5 — Containerization and Local Infrastructure
 
 * [ ] Standardize Dockerfiles across services
 * [ ] Finalize Docker Compose configuration
@@ -668,7 +702,7 @@ JWT signing configuration must also be supplied securely. Do not use example cre
 * [ ] Optimize image sizes and build caching
 * [ ] Test clean startup and recovery behavior
 
-### Phase 5 — Kubernetes Deployment
+### Phase 6 — Kubernetes Deployment
 
 * [ ] Provision a kubeadm cluster
 * [ ] Configure namespaces and networking
@@ -680,7 +714,7 @@ JWT signing configuration must also be supplied securely. Do not use example cre
 * [ ] Implement and test rolling deployments
 * [ ] Validate scaling and recovery behavior
 
-### Phase 6 — Terraform and Cloud Infrastructure
+### Phase 7 — Terraform and Cloud Infrastructure
 
 * [ ] Define reusable Terraform configurations
 * [ ] Configure networking and compute resources
@@ -689,7 +723,7 @@ JWT signing configuration must also be supplied securely. Do not use example cre
 * [ ] Automate cluster infrastructure where appropriate
 * [ ] Document infrastructure costs and teardown procedures
 
-### Phase 7 — CI/CD and Security
+### Phase 8 — CI/CD and Security
 
 * [ ] Build GitHub Actions workflows
 * [ ] Run automated tests during pull requests
@@ -701,7 +735,7 @@ JWT signing configuration must also be supplied securely. Do not use example cre
 * [ ] Automate Kubernetes deployments
 * [ ] Verify deployments through health checks
 
-### Phase 8 — Production Readiness
+### Phase 9 — Production Readiness
 
 * [ ] Centralize application logs
 * [ ] Collect metrics and configure monitoring
@@ -735,22 +769,45 @@ These concerns will be addressed incrementally as the project moves from a worki
 
 ---
 
+## 🎯 Immediate Development Focus
+
+The current implementation order is intentionally focused. Avoid starting Kubernetes or Terraform deployment work before the application security and payment workflows are stable.
+
+1. **Finish Keycloak integration:** complete role-based authorization, validate tokens in each service, and settle how Keycloak identities map to local user records.
+2. **Build the Payment Service:** implement the payment data model and state machine, then integrate SSLCommerz sandbox checkout and server-side validation.
+3. **Make payment events reliable:** add idempotency, duplicate IPN protection, a transactional outbox, and idempotent RabbitMQ consumers.
+4. **Test failure scenarios:** cover gateway timeouts, duplicate callbacks, failed payments, delayed notifications, and service restarts.
+5. **Return to platform engineering:** strengthen automated tests and local container behavior, then move to Kubernetes, Terraform, and GitHub Actions.
+
+### Payment architecture decisions
+
+* The Payment Service owns payment records and payment status; the Order Service owns order records and order status.
+* The Payment Service must not write directly to the Order Service database.
+* The payable amount must come from trusted order data, never from a frontend-supplied amount.
+* A browser redirect is not proof of payment. Validate the transaction with SSLCommerz from the backend before marking it successful.
+* Publish payment outcomes through RabbitMQ; use an outbox to avoid losing events between database commits and message publication.
+* Treat timeouts as potentially uncertain outcomes and reconcile with the gateway before creating another charge.
+
+---
+
 ## 📊 Current Project Status
 
 QuickMunch has progressed beyond its initial single-service stage.
 
 ### Implemented foundations
 
-* User Service with authentication-related functionality
+* User Service with user/profile persistence and Keycloak-based JWT authentication integration in progress
+* Keycloak realm, test-user setup, issuer/JWK configuration, and role conversion work
 * Restaurant Service
-* Order Service
-* RabbitMQ order-event integration
+* Order Service with order validation and lifecycle handling
+* RabbitMQ order-event integration (`order.exchange` and order routing keys)
 * Notification Service consuming order-created events and sending emails
-* Containerized development environment
+* Local Docker environment using PostgreSQL 17 and RabbitMQ 4
 
 ### Major work remaining
 
-* Payment Service and provider integration
+* Finish Keycloak authorization and cross-service security verification
+* Payment Service and SSLCommerz integration
 * Stronger automated testing and distributed failure handling
 * Kubernetes deployment and Ingress
 * Terraform-managed infrastructure
