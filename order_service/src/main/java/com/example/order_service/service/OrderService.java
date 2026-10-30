@@ -9,6 +9,7 @@ import com.example.order_service.enums.OrderStatus;
 import com.example.order_service.enums.PaymentStatus;
 import com.example.order_service.exception.InvalidOrderStateException;
 import com.example.order_service.exception.OrderNotFoundException;
+import com.example.order_service.message.OrderEventPublisher;
 import com.example.order_service.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

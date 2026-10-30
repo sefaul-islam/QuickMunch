@@ -1,8 +1,7 @@
-package com.example.order_service.service;
+package com.example.order_service.message;
 
 import com.example.order_service.dto.OrderEvent;
 import com.example.order_service.entity.Order;
-import com.example.order_service.enums.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
