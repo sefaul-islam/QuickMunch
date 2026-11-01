@@ -18,6 +18,24 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/quickmunch}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/quickmunch/protocol/openid-connect/certs}
+      client:
+        registration:
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_ID:order-service}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET}
+            authorization-grant-type: client_credentials
+            scope: openid,profile,email
+            client-authentication-method: client_secret_basic
+        provider:
+          keycloak:
+            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/quickmunch}
+            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/quickmunch/protocol/openid-connect/certs}
 
 rabbitmq:
   exchange:
@@ -44,9 +62,6 @@ management:
 
 server:
   port: 8083
-
-jwt:
-  secret: ${JWT_SECRET:f4a8b2c9d1e6f3a7b5c0d2e8f1a4b7c9d3e6f0a2b5c8d1e4f7a0b3c6d9e2f5}
 
 order:
   delivery-fee: ${ORDER_DELIVERY_FEE:2.99}
