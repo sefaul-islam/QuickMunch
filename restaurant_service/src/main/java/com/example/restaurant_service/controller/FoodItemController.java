@@ -8,6 +8,7 @@ import com.example.restaurant_service.service.FoodItemService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class FoodItemController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('RESTAURANT_OWNER') or hasRole('ADMIN')")
     public ResponseEntity<FoodItemResponse> createFoodItem(
             @PathVariable Long restaurantId,
             @Valid @RequestBody CreateFoodItemRequest request,
@@ -50,6 +52,7 @@ public class FoodItemController {
     }
 
     @PutMapping("/{foodId}")
+    @PreAuthorize("hasRole('RESTAURANT_OWNER') or hasRole('ADMIN')")
     public ResponseEntity<FoodItemResponse> updateFoodItem(
             @PathVariable Long restaurantId,
             @PathVariable Long foodId,
@@ -62,6 +65,7 @@ public class FoodItemController {
     }
 
     @DeleteMapping("/{foodId}")
+    @PreAuthorize("hasRole('RESTAURANT_OWNER') or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteFoodItem(
             @PathVariable Long restaurantId,
             @PathVariable Long foodId,
@@ -71,8 +75,9 @@ public class FoodItemController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{foodId}/availability")
-    public ResponseEntity<FoodItemResponse> updateAvailability(
+     @PatchMapping("/{foodId}/availability")
+     @PreAuthorize("hasRole('RESTAURANT_OWNER') or hasRole('ADMIN')")
+     public ResponseEntity<FoodItemResponse> updateAvailability(
             @PathVariable Long restaurantId,
             @PathVariable Long foodId,
             @RequestBody Map<String, Boolean> request,
