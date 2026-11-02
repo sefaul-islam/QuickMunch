@@ -1,9 +1,6 @@
 package com.example.user_service.service;
 
-import com.example.user_service.dto.AddressResponseDTO;
-import com.example.user_service.dto.PublicUserProfileDTO;
-import com.example.user_service.dto.UpdateUserRequestDTO;
-import com.example.user_service.dto.UserProfileResponseDTO;
+import com.example.user_service.dto.*;
 import com.example.user_service.entity.User;
 import com.example.user_service.exception.ResourceNotFoundException;
 import com.example.user_service.exception.UnauthorizedException;
@@ -87,6 +84,11 @@ public class UserService {
         user.setIsActive(false);
         userRepository.save(user);
     }
+    public UserResponseDTO getUserByKeycloakId(String keycloakId) {
+        User user = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with keycloakId: " + keycloakId));
+        return new UserResponseDTO(user.getId(), user.getKeycloakId(), user.getEmail());
+    }
 
     private UserProfileResponseDTO mapToDto(User user) {
         return new UserProfileResponseDTO(
@@ -112,4 +114,6 @@ public class UserService {
                         .collect(Collectors.toSet())
         );
     }
+
+
 }

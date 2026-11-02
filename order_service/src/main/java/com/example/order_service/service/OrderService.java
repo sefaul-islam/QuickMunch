@@ -31,8 +31,12 @@ public class OrderService {
     @Value("${order.delivery-fee:2.99}")
     private BigDecimal defaultDeliveryFee;
 
+    private UserResponseDTO getAuthenticatedUser(String keycloakId) {
+        return userServiceClient.getUserByKeycloakId(keycloakId);
+    }
+
     @Transactional
-    public OrderConfirmationResponse createOrder(Long userId,String email, CreateOrderDTO dto) {
+    public OrderConfirmationResponse createOrder(String keycloakId,String email, CreateOrderDTO dto) {
         userServiceClient.verifyUserExists(userId);
         restaurantServiceClient.getRestaurant(dto.restaurantId());
 

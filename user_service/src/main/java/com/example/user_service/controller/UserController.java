@@ -3,6 +3,7 @@ package com.example.user_service.controller;
 import com.example.user_service.dto.PublicUserProfileDTO;
 import com.example.user_service.dto.UpdateUserRequestDTO;
 import com.example.user_service.dto.UserProfileResponseDTO;
+import com.example.user_service.dto.UserResponseDTO;
 import com.example.user_service.security.KeycloakSecurityUtil;
 import com.example.user_service.service.UserService;
 import com.example.user_service.service.UserSyncService;
@@ -59,5 +60,10 @@ public class UserController {
         String authenticatedEmail = KeycloakSecurityUtil.getEmail(authentication);
         userService.deleteUser(userId, authenticatedEmail);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/validate")
+    public ResponseEntity<UserResponseDTO> validateUserExists(
+            @RequestParam("keycloakId") String keycloakId) {
+        return ResponseEntity.ok(userService.getUserByKeycloakId(keycloakId));
     }
 }

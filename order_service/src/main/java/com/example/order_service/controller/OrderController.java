@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,53 +25,65 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<OrderConfirmationResponse> createOrder(
             @Valid @RequestBody CreateOrderDTO dto,
-            Authentication authentication) {
-        AuthenticatedUser user = (AuthenticatedUser) authentication.getPrincipal();
-        Long userId = user.userId();
-        String email = user.email();
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String keycloakId = jwt.getSubject();
+        String email = jwt.getClaimAsString("email");
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(orderService.createOrder(userId,email, dto));
+                .body(orderService.createOrder(keycloakId,email, dto));
     }
 
-    @GetMapping("/{orderId}")
-    public ResponseEntity<OrderConfirmationResponse> getOrder(
-            @PathVariable Long orderId,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        return ResponseEntity.ok(orderService.getOrder(orderId, userId));
-    }
-
-    @GetMapping
-    public ResponseEntity<List<OrderConfirmationResponse>> getOrdersByUser(
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
-    }
-
-    @GetMapping("/restaurant/{restaurantId}")
-    public ResponseEntity<List<OrderConfirmationResponse>> getOrdersByRestaurant(
-            @PathVariable Long restaurantId) {
-        return ResponseEntity.ok(orderService.getOrdersByRestaurant(restaurantId));
-    }
-
-    @PatchMapping("/{orderId}/status")
-    public ResponseEntity<OrderConfirmationResponse> updateOrderStatus(
-            @PathVariable Long orderId,
-            @Valid @RequestBody OrderStatusUpdateDTO dto,
-            Authentication authentication) {
-        AuthenticatedUser  user = (AuthenticatedUser) authentication.getPrincipal();
-        Long userId = user.userId();
-        String email = user.email();
-        return ResponseEntity.ok(orderService.updateOrderStatus(orderId, email,dto, userId));
-    }
-
-    @PatchMapping("/{orderId}/cancel")
-    public ResponseEntity<OrderConfirmationResponse> cancelOrder(
-            @PathVariable Long orderId,
-            Authentication authentication) {
-        AuthenticatedUser  user = (AuthenticatedUser) authentication.getPrincipal();
-        Long userId = user.userId();
-        String email = user.email();
-        return ResponseEntity.ok(orderService.cancelOrder(orderId,email,userId));
-    }
+//    @PostMapping
+//    public ResponseEntity<OrderConfirmationResponse> createOrder(
+//            @Valid @RequestBody CreateOrderDTO dto,
+//            Authentication authentication) {
+//        AuthenticatedUser user = (AuthenticatedUser) authentication.getPrincipal();
+//        Long userId = user.userId();
+//        String email = user.email();
+//        return ResponseEntity.status(HttpStatus.CREATED)
+//                .body(orderService.createOrder(userId,email, dto));
+//    }
+//
+//    @GetMapping("/{orderId}")
+//    public ResponseEntity<OrderConfirmationResponse> getOrder(
+//            @PathVariable Long orderId,
+//            Authentication authentication) {
+//        Long userId = (Long) authentication.getPrincipal();
+//        return ResponseEntity.ok(orderService.getOrder(orderId, userId));
+//    }
+//
+//    @GetMapping
+//    public ResponseEntity<List<OrderConfirmationResponse>> getOrdersByUser(
+//            Authentication authentication) {
+//        Long userId = (Long) authentication.getPrincipal();
+//        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
+//    }
+//
+//    @GetMapping("/restaurant/{restaurantId}")
+//    public ResponseEntity<List<OrderConfirmationResponse>> getOrdersByRestaurant(
+//            @PathVariable Long restaurantId) {
+//        return ResponseEntity.ok(orderService.getOrdersByRestaurant(restaurantId));
+//    }
+//
+//    @PatchMapping("/{orderId}/status")
+//    public ResponseEntity<OrderConfirmationResponse> updateOrderStatus(
+//            @PathVariable Long orderId,
+//            @Valid @RequestBody OrderStatusUpdateDTO dto,
+//            Authentication authentication) {
+//        AuthenticatedUser  user = (AuthenticatedUser) authentication.getPrincipal();
+//        Long userId = user.userId();
+//        String email = user.email();
+//        return ResponseEntity.ok(orderService.updateOrderStatus(orderId, email,dto, userId));
+//    }
+//
+//    @PatchMapping("/{orderId}/cancel")
+//    public ResponseEntity<OrderConfirmationResponse> cancelOrder(
+//            @PathVariable Long orderId,
+//            Authentication authentication) {
+//        AuthenticatedUser  user = (AuthenticatedUser) authentication.getPrincipal();
+//        Long userId = user.userId();
+//        String email = user.email();
+//        return ResponseEntity.ok(orderService.cancelOrder(orderId,email,userId));
+//    }
 }
