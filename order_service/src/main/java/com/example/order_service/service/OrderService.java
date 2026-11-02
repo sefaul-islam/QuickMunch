@@ -9,6 +9,7 @@ import com.example.order_service.enums.OrderStatus;
 import com.example.order_service.enums.PaymentStatus;
 import com.example.order_service.exception.InvalidOrderStateException;
 import com.example.order_service.exception.OrderNotFoundException;
+import com.example.order_service.exception.UserNotFoundException;
 import com.example.order_service.message.OrderEventPublisher;
 import com.example.order_service.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,14 +38,18 @@ public class OrderService {
 
     @Transactional
     public OrderConfirmationResponse createOrder(String keycloakId,String email, CreateOrderDTO dto) {
-        userServiceClient.verifyUserExists(userId);
-        restaurantServiceClient.getRestaurant(dto.restaurantId());
+
+        UserResponseDTO user = getAuthenticatedUser(keycloakId);
+        if(user == null) {
+            throw new UserNotFoundException(keycloakId);
+        }
+//        restaurantServiceClient.getRestaurant(dto.restaurantId()); //TODO will handle later
 
         BigDecimal subtotal = BigDecimal.ZERO;
 
         Order order = Order.builder()
-                .userId(userId)
-                .restaurantId(dto.restaurantId())
+                .userId(user.id())
+                .restaurantId(dto.restaurantId())   //TODO will handle later restaurant validation
                 .status(OrderStatus.PENDING)
                 .paymentStatus(PaymentStatus.PENDING)
                 .deliveryAddress(dto.deliveryAddress())

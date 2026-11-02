@@ -1,30 +1,43 @@
 package com.example.order_service.client;
 
+import com.example.order_service.dto.UserResponseDTO;
 import com.example.order_service.exception.UserNotFoundException;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
+@RequiredArgsConstructor
 public class UserServiceClient {
 
-    private final RestClient restClient;
+    private final RestClient.Builder restClientBuilder;
 
-    public UserServiceClient(
-            @Value("${user-service.base-url}") String baseUrl) {
-        this.restClient = RestClient.builder()
+    @Value("${user-service.base-url}")
+    private String baseUrl;
+
+    private RestClient restClient;
+
+    @PostConstruct
+    public void init() {
+        this.restClient = restClientBuilder
                 .baseUrl(baseUrl)
                 .build();
     }
 
-    public void verifyUserExists(Long userId){
-        restClient.get()
-                .uri("/api/users/{userId}", userId)
+    public UserResponseDTO getUserByKeycloakId(String keycloakId) {
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/users/validate")
+                        .queryParam("keycloakId", keycloakId)
+                        .build()
+                )
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
-                    throw new UserNotFoundException(userId);
+                    throw new UserNotFoundException(keycloakId);
                 })
-                .toBodilessEntity();
+                .body(UserResponseDTO.class);
     }
 }

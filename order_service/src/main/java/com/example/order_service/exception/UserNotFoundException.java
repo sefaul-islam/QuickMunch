@@ -2,7 +2,7 @@ package com.example.order_service.exception;
 
 public class UserNotFoundException extends RuntimeException {
 
-    public UserNotFoundException(Long id){
+    public UserNotFoundException(String id){
         super("User not found with id:"+ id);
     }
 }
