@@ -31,7 +31,6 @@ spring:
             client-id: ${KEYCLOAK_CLIENT_ID:order-service}
             client-secret: ${KEYCLOAK_CLIENT_SECRET}
             authorization-grant-type: client_credentials
-            scope: openid,profile,email
             client-authentication-method: client_secret_basic
         provider:
           keycloak:
