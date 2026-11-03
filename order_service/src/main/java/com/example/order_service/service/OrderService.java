@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,6 +29,7 @@ public class OrderService {
     private final UserServiceClient userServiceClient;
     private final RestaurantServiceClient restaurantServiceClient;
     private final OrderEventPublisher orderEventPublisher;
+    private final OrderPersistenceService orderPersistenceService;
 
     @Value("${order.delivery-fee:2.99}")
     private BigDecimal defaultDeliveryFee;
@@ -36,48 +38,48 @@ public class OrderService {
         return userServiceClient.getUserByKeycloakId(keycloakId);
     }
 
-    @Transactional
+
     public OrderConfirmationResponse createOrder(String keycloakId,String email, CreateOrderDTO dto) {
 
         UserResponseDTO user = getAuthenticatedUser(keycloakId);
-        if(user == null) {
-            throw new UserNotFoundException(keycloakId);
-        }
-//        restaurantServiceClient.getRestaurant(dto.restaurantId()); //TODO will handle later
+
+        restaurantServiceClient.getRestaurant(dto.restaurantId());
 
         BigDecimal subtotal = BigDecimal.ZERO;
 
-        Order order = Order.builder()
-                .userId(user.id())
-                .restaurantId(dto.restaurantId())   //TODO will handle later restaurant validation
-                .status(OrderStatus.PENDING)
-                .paymentStatus(PaymentStatus.PENDING)
-                .deliveryAddress(dto.deliveryAddress())
-                .orderNumber("QM-" + System.currentTimeMillis())
-                .build();
+        List<OrderItem> orderItems = new ArrayList<>();
 
         for (OrderItemDTO itemDto : dto.items()) {
-            FoodItemDTO foodItem = restaurantServiceClient.getFoodItem(dto.restaurantId(), itemDto.foodItemId());
+            FoodItemDTO foodItem = restaurantServiceClient.getFoodItem(
+                    dto.restaurantId(),
+                    itemDto.foodItemId()
+            );
+            if(foodItem == null || foodItem.price() == null){
+                throw new IllegalStateException(
+                        "Invalid food item or price for food item ID: " + itemDto.foodItemId()
+                );
+            }
+            if(foodItem.price().compareTo(BigDecimal.ZERO) < 0){
+                throw new IllegalStateException(
+                        "Food item price cannot be negative for food item ID: " + itemDto.foodItemId()
+                );
+            }
+
             
             BigDecimal itemSubtotal = foodItem.price().multiply(BigDecimal.valueOf(itemDto.quantity()));
             subtotal = subtotal.add(itemSubtotal);
             
             OrderItem item = OrderItem.builder()
-                    .order(order)
                     .foodItemId(foodItem.id())
                     .quantity(itemDto.quantity())
                     .unitPrice(foodItem.price())
                     .subtotal(itemSubtotal)
                     .build();
             
-            order.getItems().add(item);
+            orderItems.add(item);
         }
 
-        order.setSubtotal(subtotal);
-        order.setDeliveryFee(defaultDeliveryFee);
-        order.setTotalAmount(subtotal.add(defaultDeliveryFee));
-
-        Order savedOrder = orderRepository.save(order);
+        Order savedOrder = orderPersistenceService.saveOrder(user.id(), dto, subtotal, orderItems);
         orderEventPublisher.publishOrderCreated(savedOrder,email);
 
         return mapToResponse(savedOrder);

@@ -10,6 +10,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,6 +42,7 @@ public class OrderItem {
     private Long foodItemId;
 
     @Column(nullable = false)
+    @Min(1)
     private Integer quantity;
 
     @Column(nullable = false, precision = 10, scale = 2)

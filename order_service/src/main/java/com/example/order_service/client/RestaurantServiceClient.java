@@ -8,10 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
-import org.springframew
 import org.springframework.web.client.RestClient;
 
-@RequiredArgsConstructorweb.client.RestClient;
 
 @Component
 @RequiredArgsConstructor
@@ -35,7 +33,7 @@ public class RestaurantServiceClient {
          restClient.get()
                 .uri("/api/restaurants/{id}", restaurantId)
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
+                .onStatus(status->status.value() == 404, (request, response) -> {
                     throw new RestaurantNotFoundException(restaurantId);
                 })
                 .toBodilessEntity();
@@ -45,7 +43,7 @@ public class RestaurantServiceClient {
         return restClient.get()
                 .uri("/api/restaurants/{restaurantId}/foods/{foodId}", restaurantId, foodItemId)
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
+                .onStatus(status->status.value() == 404, (request, response) -> {
                     throw new FoodItemNotFoundException(foodItemId);
                 })
                 .body(FoodItemDTO.class);
