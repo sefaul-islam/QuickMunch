@@ -192,7 +192,7 @@ public class OrderService {
                 order.getSubtotal(),
                 order.getDeliveryFee(),
                 order.getTotalAmount(),
-                order.getDeliveryAddress(),
+                order.getDeliveryAddressId(),
                 itemResponses,
                 order.getCreatedAt()
         );

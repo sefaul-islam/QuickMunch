@@ -16,7 +16,7 @@ public record OrderConfirmationResponse(
         BigDecimal subtotal,
         BigDecimal deliveryFee,
         BigDecimal totalAmount,
-        String deliveryAddress,
+        Long deliveryAddressId,
         List<OrderItemResponse> items,
         LocalDateTime createdAt
 ) {}

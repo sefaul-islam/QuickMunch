@@ -15,5 +15,8 @@ public record CreateOrderDTO(
 
         @NotEmpty(message = "Order must contain at least one item")
         @Valid
-        List<OrderItemDTO> items
+        List<OrderItemDTO> items,
+
+        @NotNull(message = "Delivery address ID is required")
+        Long deliveryAddressId
 ) {}
