@@ -3,22 +3,32 @@ package com.example.order_service.client;
 import com.example.order_service.dto.FoodItemDTO;
 import com.example.order_service.exception.FoodItemNotFoundException;
 import com.example.order_service.exception.RestaurantNotFoundException;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
+import org.springframew
 import org.springframework.web.client.RestClient;
 
-@Component
-public class RestaurantServiceClient {
-    private final RestClient restClient;
+@RequiredArgsConstructorweb.client.RestClient;
 
-    public RestaurantServiceClient(
-            @Value("${restaurant-service.base-url}")
-            String baseUrl
-    ){
-        this.restClient = RestClient.builder()
-            .baseUrl(baseUrl)
-            .build();
+@Component
+@RequiredArgsConstructor
+public class RestaurantServiceClient {
+
+    private final RestClient.Builder restClientBuilder;
+
+    @Value("${restaurant-service.base-url}")
+    private String baseUrl;
+
+    private RestClient restClient;
+
+    @PostConstruct
+    public void init() {
+        this.restClient = restClientBuilder
+                .baseUrl(baseUrl)
+                .build();
     }
 
     public void getRestaurant(Long restaurantId){
