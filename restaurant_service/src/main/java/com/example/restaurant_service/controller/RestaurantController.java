@@ -8,6 +8,7 @@ import com.example.restaurant_service.service.RestaurantService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,9 +26,11 @@ public class RestaurantController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('RESTAURANT_OWNER')")
     public ResponseEntity<RestaurantResponse> createRestaurant(
             @Valid @RequestBody CreateRestaurantRequest request,
             Authentication authentication) {
+
         String ownerId = KeycloakSecurityUtil.getKeycloakId(authentication);
         RestaurantResponse response = restaurantService.createRestaurant(
                 request, ownerId);
