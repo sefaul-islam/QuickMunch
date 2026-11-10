@@ -1,5 +1,6 @@
 package com.example.order_service.message;
 
+import com.example.order_service.dto.DeliveryAddressDTO;
 import com.example.order_service.dto.OrderEvent;
 import com.example.order_service.entity.Order;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,18 @@ public class OrderEventPublisher {
     }
 
     private OrderEvent buildEvent(Order order, String email,String eventType) {
+
+        DeliveryAddressDTO deliveryAddressDTO = new DeliveryAddressDTO(
+                order.getDeliveryAddress().getLabel(),
+                order.getDeliveryAddress().getStreet(),
+                order.getDeliveryAddress().getCity(),
+                order.getDeliveryAddress().getState(),
+                order.getDeliveryAddress().getZipCode(),
+                order.getDeliveryAddress().getCountry(),
+                order.getDeliveryAddress().getRecipientName(),
+                order.getDeliveryAddress().getRecipientPhoneNumber(),
+                order.getDeliveryAddress().getDeliveryInstructions()
+        );
         return new OrderEvent(
                 order.getOrderNumber(),
                 order.getUserId(),
@@ -55,7 +68,7 @@ public class OrderEventPublisher {
                 email,
                 order.getStatus(),
                 order.getTotalAmount(),
-                order.getDeliveryAddress(),
+                deliveryAddressDTO,
                 eventType,
                 LocalDateTime.now()
         );

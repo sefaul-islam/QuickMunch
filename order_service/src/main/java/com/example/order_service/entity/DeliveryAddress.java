@@ -36,7 +36,7 @@ public class DeliveryAddress {
 
     private String recipientName;
 
-    private String recipientPhone;
+    private String recipientPhoneNumber;
 
     @Column(length = 500)
     private String deliveryInstructions;
