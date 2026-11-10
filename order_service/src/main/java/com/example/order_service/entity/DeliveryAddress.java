@@ -24,7 +24,7 @@ public class DeliveryAddress {
 
     private String state;
 
-    private String zipCode;
+    private String postalCode;
 
     private String country;
 

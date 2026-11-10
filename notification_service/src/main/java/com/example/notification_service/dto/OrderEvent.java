@@ -11,7 +11,7 @@ public record OrderEvent(
         String email,
         String status,
         BigDecimal totalAmount,
-        String deliveryAddress,
+        DeliveryAddressDTO deliveryAddress,
         String eventType,
         LocalDateTime timestamp
 ) implements Serializable {}

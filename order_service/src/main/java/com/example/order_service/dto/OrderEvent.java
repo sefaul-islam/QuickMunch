@@ -1,6 +1,4 @@
 package com.example.order_service.dto;
-
-import com.example.order_service.entity.DeliveryAddress;
 import com.example.order_service.enums.OrderStatus;
 import java.io.Serializable;
 import java.math.BigDecimal;

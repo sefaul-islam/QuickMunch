@@ -5,7 +5,7 @@ public record DeliveryAddressDTO(
     String street,
     String city,
     String state,
-    String zipCode,
+    String postalCode,
     String country,
     String recipientName,
     String recipientPhoneNumber,

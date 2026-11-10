@@ -55,7 +55,7 @@ public class OrderEventPublisher {
                 order.getDeliveryAddress().getStreet(),
                 order.getDeliveryAddress().getCity(),
                 order.getDeliveryAddress().getState(),
-                order.getDeliveryAddress().getZipCode(),
+                order.getDeliveryAddress().getPostalCode(),
                 order.getDeliveryAddress().getCountry(),
                 order.getDeliveryAddress().getRecipientName(),
                 order.getDeliveryAddress().getRecipientPhoneNumber(),

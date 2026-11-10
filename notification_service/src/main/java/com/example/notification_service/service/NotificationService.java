@@ -1,5 +1,6 @@
 package com.example.notification_service.service;
 
+import com.example.notification_service.dto.DeliveryAddressDTO;
 import com.example.notification_service.dto.OrderEvent;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -27,34 +28,46 @@ public class NotificationService {
         log.info("Status: {}", event.status());
         String subject = "QuickMunch Order Confirmed - " + event.orderNumber();
 
+        DeliveryAddressDTO address = event.deliveryAddress();
+
         String body = """
-            Hello,
+        Hello,
 
-            Thank you for ordering from QuickMunch!
+        Thank you for ordering from QuickMunch!
 
-            Your order has been successfully created.
+        Your order has been successfully created.
 
-            Order Details
-            -------------
-            Order Number: %s
-            Restaurant ID: %s
-            Status: %s
-            Total Amount: %s
-            Delivery Address: %s
+        Order Details
+        -------------
+        Order Number: %s
+        Restaurant ID: %s
+        Status: %s
+        Total Amount: %s
 
-            We will notify you when your order status changes.
+        Delivery Details
+        ----------------
+        Recipient: %s
+        Phone Number: %s
+        Street: %s
+        City: %s
+        Postal Code: %s
 
-            Thank you for using QuickMunch!
+        We will notify you when your order status changes.
 
-            QuickMunch Team
-            """.formatted(
+        Thank you for using QuickMunch!
+
+        QuickMunch Team
+        """.formatted(
                 event.orderNumber(),
                 event.restaurantId(),
                 event.status(),
                 event.totalAmount(),
-                event.deliveryAddress()
+                address.recipientName(),
+                address.recipientPhoneNumber(),
+                address.street(),
+                address.city(),
+                address.postalCode()
         );
-
         emailService.sendEmail(
                 event.email(),
                 subject,
