@@ -55,12 +55,14 @@ public class RestaurantController {
     }
 
     @GetMapping("/my")
+    @PreAuthorize("hasRole('RESTAURANT_OWNER')")
     public ResponseEntity<List<RestaurantResponse>> getMyRestaurants(
             Authentication authentication) {
         String ownerId = KeycloakSecurityUtil.getKeycloakId(authentication);
         return ResponseEntity.ok(restaurantService.getRestaurantsByOwner(ownerId));
     }
 
+    @PreAuthorize("hasRole('RESTAURANT_OWNER')")
     @PutMapping("/{restaurantId}")
     public ResponseEntity<RestaurantResponse> updateRestaurant(
             @PathVariable Long restaurantId,
@@ -71,6 +73,7 @@ public class RestaurantController {
                 restaurantService.updateRestaurant(restaurantId, request, userId));
     }
 
+    @PreAuthorize("hasRole('RESTAURANT_OWNER')")
     @DeleteMapping("/{restaurantId}")
     public ResponseEntity<Void> deleteRestaurant(
             @PathVariable Long restaurantId,
@@ -80,6 +83,7 @@ public class RestaurantController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('RESTAURANT_OWNER')")
     @PatchMapping("/{restaurantId}/status")
     public ResponseEntity<RestaurantResponse> updateStatus(
             @PathVariable Long restaurantId,
