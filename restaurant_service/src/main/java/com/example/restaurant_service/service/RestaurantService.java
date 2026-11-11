@@ -11,25 +11,24 @@ import com.example.restaurant_service.mapper.RestaurantMapper;
 import com.example.restaurant_service.repository.CategoryRepository;
 import com.example.restaurant_service.repository.FoodItemRepository;
 import com.example.restaurant_service.repository.RestaurantRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final FoodItemRepository foodItemRepository;
     private final CategoryRepository categoryRepository;
 
-    public RestaurantService(RestaurantRepository restaurantRepository,
-                              FoodItemRepository foodItemRepository,
-                              CategoryRepository categoryRepository) {
-        this.restaurantRepository = restaurantRepository;
-        this.foodItemRepository = foodItemRepository;
-        this.categoryRepository = categoryRepository;
-    }
+
 
     @Transactional
     public RestaurantResponse createRestaurant(CreateRestaurantRequest request,
@@ -40,17 +39,18 @@ public class RestaurantService {
     }
 
     @Transactional(readOnly = true)
-    @org.springframework.cache.annotation.Cacheable(value = "restaurants", key = "#id")
+    @Cacheable(value = "restaurants", key = "#id")
     public RestaurantResponse getRestaurant(Long id) {
         Restaurant restaurant = findRestaurantOrThrow(id);
         return RestaurantMapper.toResponse(restaurant);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "restaurants", key = "'all'")
     public List<RestaurantResponse> getAllRestaurants() {
         return restaurantRepository.findAll().stream()
                 .map(RestaurantMapper::toResponse)
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Transactional(readOnly = true)
