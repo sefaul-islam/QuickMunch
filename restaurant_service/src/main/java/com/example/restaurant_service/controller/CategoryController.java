@@ -8,6 +8,7 @@ import com.example.restaurant_service.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,7 @@ public class CategoryController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('RESTAURANT_OWNER') or hasRole('ADMIN')")
     public ResponseEntity<CategoryResponse> createCategory(
             @PathVariable Long restaurantId,
             @Valid @RequestBody CreateCategoryRequest request,
@@ -40,6 +42,7 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.getCategories(restaurantId));
     }
 
+    @PreAuthorize("hasRole('RESTAURANT_OWNER') or hasRole('ADMIN')")
     @PutMapping("/{categoryId}")
     public ResponseEntity<CategoryResponse> updateCategory(
             @PathVariable Long restaurantId,
@@ -53,6 +56,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{categoryId}")
+    @PreAuthorize("hasRole('RESTAURANT_OWNER') or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCategory(
             @PathVariable Long restaurantId,
             @PathVariable Long categoryId,
