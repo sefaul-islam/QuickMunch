@@ -24,6 +24,7 @@ public class DeliveryAddress {
 
     private String state;
 
+    @Column(nullable = false)
     private String postalCode;
 
     private String country;
@@ -34,8 +35,10 @@ public class DeliveryAddress {
     @Column(precision = 10, scale = 7)
     private BigDecimal longitude;
 
+
     private String recipientName;
 
+    @Column(nullable = false)
     private String recipientPhoneNumber;
 
     @Column(length = 500)

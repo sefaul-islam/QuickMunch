@@ -6,14 +6,13 @@ import com.example.order_service.dto.*;
 import com.example.order_service.entity.Order;
 import com.example.order_service.entity.OrderItem;
 import com.example.order_service.enums.OrderStatus;
-import com.example.order_service.enums.PaymentStatus;
 import com.example.order_service.exception.InvalidOrderStateException;
 import com.example.order_service.exception.OrderNotFoundException;
-import com.example.order_service.exception.UserNotFoundException;
 import com.example.order_service.message.OrderEventPublisher;
 import com.example.order_service.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +38,8 @@ public class OrderService {
     }
 
 
+
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public OrderConfirmationResponse createOrder(String keycloakId,String email, CreateOrderDTO dto) {
 
         UserResponseDTO user = getAuthenticatedUser(keycloakId);

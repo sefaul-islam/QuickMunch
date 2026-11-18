@@ -10,8 +10,8 @@ public record CreateOrderDTO(
         @NotNull(message = "Restaurant ID is required")
         Long restaurantId,
 
-        @NotBlank(message = "Delivery address is required")
-        String deliveryAddress,
+        @Valid
+        DeliveryAddressDTO deliveryAddress,
 
         @NotEmpty(message = "Order must contain at least one item")
         @Valid
