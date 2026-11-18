@@ -11,6 +11,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +28,7 @@ public class RedisConfig {
                         BasicPolymorphicTypeValidator.builder()
                                 .allowIfSubType("com.example.restaurant_service.")
                                 .allowIfSubType("java.util.")
+                                .allowIfSubType(BigDecimal.class)
                                 .build()
                 ).build();
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
