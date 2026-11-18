@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #173D32;
+  --color-primary-hover: #1E4D40;
+  --color-primary-dark: #112E26;
+  --color-primary-light: #245849;
+  --color-primary-surface: #E8EFEA;
+
+  --color-cream: #F5F0E6;
+  --color-cream-card: #FAF7F2;
+  --color-cream-surface: #FCFAF6;
+  --color-cream-border: #E8E1D3;
+  --color-cream-dark: #ECE4D4;
+
+  --color-charcoal: #292B28;
+  --color-charcoal-muted: #626661;
+  --color-charcoal-faint: #929690;
+
+  --color-terracotta: #D98245;
+  --color-terracotta-hover: #C36F34;
+  --color-terracotta-surface: #FAF0E8;
+  --color-terracotta-dark: #9F5422;
+
+  --color-sage: #DCE5DA;
+  --color-sage-light: #EBF1EA;
+  --color-sage-dark: #BFCEBC;
+  --color-sage-deep: #2A483D;
+
+  --font-serif: "Newsreader", Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --shadow-warm-sm: 0 1px 3px 0 rgba(23, 61, 50, 0.05), 0 1px 2px -1px rgba(23, 61, 50, 0.04);
+  --shadow-warm: 0 4px 20px -2px rgba(23, 61, 50, 0.07), 0 2px 6px -1px rgba(23, 61, 50, 0.04);
+  --shadow-warm-lg: 0 12px 32px -4px rgba(23, 61, 50, 0.09), 0 4px 12px -2px rgba(23, 61, 50, 0.05);
+  --shadow-editorial: 0 20px 48px -8px rgba(23, 61, 50, 0.12), 0 6px 16px -4px rgba(23, 61, 50, 0.06);
+}
+
+:root {
+  color-scheme: light;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html {
+  font-family: var(--font-sans);
+  background-color: #F5F0E6;
+  color: #292B28;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbar matching warm cream and forest green */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F0E6;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D8D0C0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #173D32;
+}
+
+/* Subtle focus ring */
+:focus-visible {
+  outline: 2px solid #173D32;
+  outline-offset: 2px;
+}
+
+/* Tabular figures for numbers, ratings and currency */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hide scrollbar for category horizontal scrolls */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
