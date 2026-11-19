@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { CartItem } from '../../types';
 import { Button } from '../ui/Button';
 import { useDialogFocus } from '../../hooks/useDialogFocus';
+import { onFoodImgError } from '../../lib/imageUtils';
 
 export interface CartDrawerProps {
   isOpen: boolean;
@@ -163,11 +164,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           src={item.dish.image}
                           alt={item.dish.name}
                           className="w-16 h-16 rounded-lg object-cover bg-cream-dark shrink-0 border border-cream-border"
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src =
-                              'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&auto=format&fit=crop&q=80';
-                          }}
+                          onError={onFoodImgError}
                         />
 
                         <div className="flex-1 min-w-0">
@@ -188,7 +185,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             whileTap={{ scale: 0.85 }}
                             type="button"
                             onClick={() => onUpdateQuantity(item.dish.id, -1)}
-                            className="p-1.5 text-charcoal hover:text-primary transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
+                            className="p-2.5 text-charcoal hover:text-primary transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
                             aria-label={`Decrease quantity of ${item.dish.name}`}
                           >
                             {item.quantity === 1 ? (
@@ -204,7 +201,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             whileTap={{ scale: 0.85 }}
                             type="button"
                             onClick={() => onUpdateQuantity(item.dish.id, 1)}
-                            className="p-1.5 text-charcoal hover:text-primary transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
+                            className="p-2.5 text-charcoal hover:text-primary transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
                             aria-label={`Increase quantity of ${item.dish.name}`}
                           >
                             <Plus size={13} />

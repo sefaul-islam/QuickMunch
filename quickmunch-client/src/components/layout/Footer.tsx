@@ -96,7 +96,7 @@ export const Footer: React.FC = () => {
                   />
                   <button
                     type="submit"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-terracotta hover:bg-terracotta-hover text-cream p-1.5 rounded-md transition-all active:scale-[0.96] cursor-pointer"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 bg-terracotta hover:bg-terracotta-hover text-cream p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md transition-all active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
                     aria-label="Subscribe to newsletter"
                   >
                     <ArrowRight size={14} />

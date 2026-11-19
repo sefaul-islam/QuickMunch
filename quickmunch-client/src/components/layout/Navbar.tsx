@@ -193,7 +193,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={onToggleMobileMenu}
-            className="lg:hidden p-2 text-charcoal hover:bg-cream-border/50 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="lg:hidden p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-charcoal hover:bg-cream-border/50 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             aria-expanded={isMobileMenuOpen}
           >
@@ -216,13 +216,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             aria-label="Search dishes and kitchens"
-            className="w-full bg-white text-xs text-charcoal placeholder:text-charcoal-faint border border-cream-border rounded-lg py-2.5 pl-9 pr-8 outline-none shadow-warm-sm focus:border-primary focus:ring-1 focus:ring-primary"
+            className="w-full bg-white text-xs text-charcoal placeholder:text-charcoal-faint border border-cream-border rounded-lg py-2.5 pl-9 pr-9 outline-none shadow-warm-sm focus:border-primary focus:ring-1 focus:ring-primary"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => onSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-muted p-0.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-charcoal-muted p-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
               aria-label="Clear mobile search query"
             >
               <X size={14} />

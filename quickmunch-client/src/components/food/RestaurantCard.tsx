@@ -3,6 +3,8 @@ import { Star, Clock, MapPin, Heart, ArrowUpRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { Restaurant } from '../../types';
 import { Badge } from '../ui/Badge';
+import { useImageFade } from '../../hooks/useImageFade';
+import { onRestaurantImgError } from '../../lib/imageUtils';
 
 export interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -21,6 +23,7 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
 }) => {
   const [internalFavorite, setInternalFavorite] = useState(false);
   const isFavorite = controlledFavorite !== undefined ? controlledFavorite : internalFavorite;
+  const coverFade = useImageFade('duration-500');
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -53,12 +56,9 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
           src={restaurant.image}
           alt={restaurant.name}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src =
-              'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80';
-          }}
+          className={`h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 ${coverFade.imgClassName}`}
+          onLoad={coverFade.onLoad}
+          onError={onRestaurantImgError}
         />
 
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-transparent to-black/25 pointer-events-none" />
@@ -72,13 +72,13 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
           )}
         </div>
 
-        {/* Animated Favorite Button with spring scale */}
+        {/* Animated Favorite Button */}
         <motion.button
           whileTap={{ scale: 1.25 }}
           whileHover={{ scale: 1.05 }}
           type="button"
           onClick={handleFavoriteClick}
-          className={`absolute top-3.5 right-3.5 p-2 rounded-full backdrop-blur-md transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          className={`absolute top-3.5 right-3.5 p-2.5 rounded-full backdrop-blur-md transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
             isFavorite
               ? 'bg-terracotta text-cream shadow-warm-sm'
               : 'bg-white/90 text-charcoal hover:bg-white shadow-warm-sm'
@@ -164,7 +164,7 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
                 e.stopPropagation();
                 onQuickAdd?.(restaurant.dishes[0], restaurant);
               }}
-              className="text-xs font-semibold text-primary hover:text-primary-hover hover:underline shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded p-0.5"
+              className="text-xs font-semibold text-primary hover:text-primary-hover hover:underline shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded p-1 min-h-[36px] flex items-center"
               aria-label={`Add signature dish ${restaurant.dishes[0].name} from ${restaurant.name} to bag`}
             >
               + ${restaurant.dishes[0].price.toFixed(2)}

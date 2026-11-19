@@ -58,7 +58,7 @@ export const RestaurantGrid: React.FC<RestaurantGridProps> = ({
                     <button
                       type="button"
                       onClick={onClearCategory}
-                      className="hover:text-cream/70 cursor-pointer ml-0.5"
+                      className="hover:text-cream/70 cursor-pointer ml-0.5 p-1 min-h-[28px] min-w-[28px] inline-flex items-center justify-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cream rounded"
                       aria-label="Clear category filter"
                     >
                       <X size={12} />
@@ -79,7 +79,7 @@ export const RestaurantGrid: React.FC<RestaurantGridProps> = ({
               <button
                 type="button"
                 onClick={() => onSortChange('curated')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                className={`px-3.5 py-2 min-h-[38px] text-xs font-semibold rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   sortBy === 'curated'
                     ? 'bg-primary text-cream shadow-warm-sm'
                     : 'text-charcoal hover:text-primary'
@@ -90,7 +90,7 @@ export const RestaurantGrid: React.FC<RestaurantGridProps> = ({
               <button
                 type="button"
                 onClick={() => onSortChange('rating')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                className={`px-3.5 py-2 min-h-[38px] text-xs font-semibold rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   sortBy === 'rating'
                     ? 'bg-primary text-cream shadow-warm-sm'
                     : 'text-charcoal hover:text-primary'
@@ -101,7 +101,7 @@ export const RestaurantGrid: React.FC<RestaurantGridProps> = ({
               <button
                 type="button"
                 onClick={() => onSortChange('prepTime')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                className={`px-3.5 py-2 min-h-[38px] text-xs font-semibold rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   sortBy === 'prepTime'
                     ? 'bg-primary text-cream shadow-warm-sm'
                     : 'text-charcoal hover:text-primary'

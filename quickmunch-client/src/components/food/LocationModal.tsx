@@ -3,6 +3,7 @@ import { MapPin, Check, Plus } from 'lucide-react';
 import type { DeliveryAddress } from '../../types';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 
 export interface LocationModalProps {
   isOpen: boolean;
@@ -115,20 +116,20 @@ export const LocationModal: React.FC<LocationModalProps> = ({
         ) : (
           <div className="p-3.5 rounded-lg border border-primary bg-primary-surface/20 space-y-2">
             <label className="text-xs font-medium text-charcoal block">Street Address</label>
-            <input
+            <Input
               type="text"
               placeholder="e.g. 75 Bleeker St, Apt 4B"
               value={customStreet}
               onChange={(e) => setCustomStreet(e.target.value)}
-              className="w-full text-xs p-2 rounded-md bg-white border border-cream-border text-charcoal focus:outline-none focus:ring-1 focus:ring-primary"
+              className="text-xs py-2"
             />
             <label className="text-xs font-medium text-charcoal block">Neighborhood or City</label>
-            <input
+            <Input
               type="text"
               placeholder="e.g. Greenwich Village, NY"
               value={customNeighborhood}
               onChange={(e) => setCustomNeighborhood(e.target.value)}
-              className="w-full text-xs p-2 rounded-md bg-white border border-cream-border text-charcoal focus:outline-none focus:ring-1 focus:ring-primary"
+              className="text-xs py-2"
             />
           </div>
         )}

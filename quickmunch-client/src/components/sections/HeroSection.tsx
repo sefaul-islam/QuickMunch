@@ -3,6 +3,8 @@ import { ArrowRight, Sparkles, Clock, Star, MapPin, ShieldCheck, Leaf } from 'lu
 import { motion } from 'motion/react';
 import type { Restaurant, DeliveryAddress } from '../../types';
 import { Button } from '../ui/Button';
+import { useImageFade } from '../../hooks/useImageFade';
+import { onFoodImgError } from '../../lib/imageUtils';
 
 export interface HeroSectionProps {
   currentAddress: DeliveryAddress;
@@ -22,6 +24,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onSelectDetailKitchen,
 }) => {
   const featuredDish = featuredRestaurant.dishes[0];
+  const heroImageFade = useImageFade('duration-700');
 
   return (
     <section className="relative w-full pt-8 pb-16 lg:pt-14 lg:pb-22 overflow-hidden">
@@ -112,12 +115,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <img
                   src={featuredDish.image}
                   alt={featuredDish.name}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src =
-                      'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&auto=format&fit=crop&q=80';
-                  }}
+                  className={`w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 ${heroImageFade.imgClassName}`}
+                  onLoad={heroImageFade.onLoad}
+                  onError={onFoodImgError}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-transparent to-black/20" />
 
@@ -179,11 +179,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   src="https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=300&auto=format&fit=crop&q=80"
                   alt="Hand-rolled egg pasta with white truffle"
                   className="w-13 h-13 rounded-lg object-cover bg-cream-dark shrink-0"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src =
-                      'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=300&auto=format&fit=crop&q=80';
-                  }}
+                  onError={onFoodImgError}
                 />
                 <div className="min-w-0 pr-1 flex-1">
                   <div className="flex items-center justify-between">

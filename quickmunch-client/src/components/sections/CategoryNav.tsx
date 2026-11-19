@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Category } from '../../types';
+import { onRestaurantImgError } from '../../lib/imageUtils';
 
 export interface CategoryNavProps {
   categories: Category[];
@@ -229,10 +230,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                       alt={category.name}
                       draggable={false}
                       className="w-full h-full object-cover pointer-events-none"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&auto=format&fit=crop&q=80';
-                      }}
+                      onError={onRestaurantImgError}
                     />
                   </div>
 

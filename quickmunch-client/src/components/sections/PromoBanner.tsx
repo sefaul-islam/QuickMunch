@@ -2,6 +2,7 @@ import React from 'react';
 import { Sparkles, ArrowRight, ShieldCheck, Thermometer } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from '../ui/Button';
+import { onRestaurantImgError } from '../../lib/imageUtils';
 
 export interface PromoBannerProps {
   onCtaClick?: () => void;
@@ -76,11 +77,7 @@ export const PromoBanner: React.FC<PromoBannerProps> = ({ onCtaClick }) => {
                   src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80"
                   alt="Curated dinner table with artisanal wood-fired and pasta creations"
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src =
-                      'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&auto=format&fit=crop&q=80';
-                  }}
+                  onError={onRestaurantImgError}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-black/10" />
 

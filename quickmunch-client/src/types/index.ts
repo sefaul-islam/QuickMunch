@@ -1,25 +1,22 @@
-export interface Dish {
+export interface BaseDishItem {
   id: string;
   name: string;
   description: string;
   price: number;
   image: string;
-  category: string;
   dietary?: string[];
+}
+
+export interface Dish extends BaseDishItem {
+  category: string;
   isSignature?: boolean;
 }
 
-export interface PopularDishItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
+export interface PopularDishItem extends BaseDishItem {
   restaurantId: string;
   restaurantName: string;
   rating: number;
   reviewCount: number;
-  dietary?: string[];
   badge?: string;
 }
 

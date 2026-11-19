@@ -464,29 +464,4 @@ export const POPULAR_DISHES: PopularDishItem[] = [
   },
 ];
 
-export const CURATED_COLLECTIONS = [
-  {
-    id: 'sourdough-masters',
-    title: 'The Sourdough Masters',
-    subtitle: 'Slow ferments, ancient grains, and heritage wood-fired ovens.',
-    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=700&auto=format&fit=crop&q=80',
-    count: '6 Kitchens',
-    tag: 'Curated',
-  },
-  {
-    id: 'hand-rolled-pastas',
-    title: 'Hand-Rolled Pasta Labs',
-    subtitle: 'Daily extruded and rolled noodles from Bologna to Rome.',
-    image: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=700&auto=format&fit=crop&q=80',
-    count: '8 Kitchens',
-    tag: 'Artisan',
-  },
-  {
-    id: 'farm-direct',
-    title: 'Zero Seed Oil & Pasture Raised',
-    subtitle: 'Whole-food cooking committed to regenerative farming.',
-    image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=700&auto=format&fit=crop&q=80',
-    count: '5 Kitchens',
-    tag: 'Clean Dining',
-  },
-];
+
