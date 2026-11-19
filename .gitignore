@@ -1,3 +1,13 @@
 .idea
 .env
 .vscode
+# AI Agent Skills
+.agents/skills/
+
+# Other AI agent configurations (if needed)
+.agy/
+.antigravity/
+.claude/skills/
+.cursor/skills/
+.claude
+.taste-skill

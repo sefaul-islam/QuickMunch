@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+#ai agent skills
+.agents/skills/
+# Other AI agent configurations (if needed)
+.agy/
+.antigravity/
+.claude/skills/
+.cursor/skills/
