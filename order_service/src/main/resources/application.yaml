@@ -26,10 +26,10 @@ spring:
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/quickmunch/protocol/openid-connect/certs}
       client:
         registration:
-          keycloak:
+          keycloak-client:
             provider: keycloak
             client-id: ${KEYCLOAK_CLIENT_ID:order-service}
-            client-secret: ${KEYCLOAK_CLIENT_SECRET}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:order-service-secret}
             authorization-grant-type: client_credentials
             client-authentication-method: client_secret_basic
         provider:
@@ -60,6 +60,8 @@ management:
 
 server:
   port: 8083
+  error:
+    include-message: always
 
 order:
   delivery-fee: ${ORDER_DELIVERY_FEE:2.99}

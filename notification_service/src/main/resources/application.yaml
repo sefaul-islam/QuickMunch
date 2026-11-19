@@ -10,8 +10,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:notification-service-mail}
+    password: ${MAIL_PASSWORD:notification-service-mail-password}
 
     properties:
       mail:
