@@ -1,31 +1,81 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, MapPin, ChevronDown, Search, Menu, X, User } from 'lucide-react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { ShoppingBag, MapPin, ChevronDown, Search, Menu, X, User, UtensilsCrossed } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { DeliveryAddress, CartItem } from '../../types';
+import { useCart } from '../../context/CartContext';
 
 export interface NavbarProps {
-  currentAddress: DeliveryAddress;
-  onOpenLocationModal: () => void;
-  cartItems: CartItem[];
-  onOpenCart: () => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  currentAddress?: DeliveryAddress;
+  onOpenLocationModal?: () => void;
+  cartItems?: CartItem[];
+  onOpenCart?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
   isMobileMenuOpen: boolean;
   onToggleMobileMenu: () => void;
   onAccountClick?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  currentAddress,
-  onOpenLocationModal,
-  cartItems,
-  onOpenCart,
-  searchQuery,
-  onSearchChange,
+  currentAddress: controlledAddress,
+  onOpenLocationModal: controlledOpenLocationModal,
+  cartItems: controlledCartItems,
+  onOpenCart: controlledOpenCart,
+  searchQuery: controlledSearchQuery,
+  onSearchChange: controlledSearchChange,
   isMobileMenuOpen,
   onToggleMobileMenu,
-  onAccountClick,
+  onAccountClick: controlledAccountClick,
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const cartContext = useCart();
+
+  // Resolve controlled props vs context
+  const currentAddress = controlledAddress ?? cartContext.currentAddress;
+  const onOpenLocationModal = controlledOpenLocationModal ?? (() => cartContext.setIsLocationModalOpen(true));
+  const cartItems = controlledCartItems ?? cartContext.cartItems;
+  const onOpenCart = controlledOpenCart ?? (() => cartContext.setIsCartOpen(true));
+  const onAccountClick = controlledAccountClick ?? (() => cartContext.showToast('QuickMunch Member: Preview profile active'));
+
+  // Search resolution
+  const isListingPage = location.pathname === '/restaurants';
+  const urlQuery = searchParams.get('q') || '';
+  const [uncontrolledSearch, setUncontrolledSearch] = useState('');
+
+  const activeSearchQuery = controlledSearchQuery !== undefined
+    ? controlledSearchQuery
+    : (isListingPage ? urlQuery : uncontrolledSearch);
+
+  const handleSearchInputChange = (val: string) => {
+    if (controlledSearchChange) {
+      controlledSearchChange(val);
+      return;
+    }
+
+    if (isListingPage) {
+      const newParams = new URLSearchParams(searchParams);
+      if (val.trim()) {
+        newParams.set('q', val);
+      } else {
+        newParams.delete('q');
+      }
+      setSearchParams(newParams, { replace: true });
+    } else {
+      setUncontrolledSearch(val);
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isListingPage) {
+      const q = activeSearchQuery.trim();
+      navigate(q ? `/restaurants?q=${encodeURIComponent(q)}` : '/restaurants');
+    }
+  };
+
   const [isScrolled, setIsScrolled] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +96,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        // Focus the visible search input
         const isDesktop = window.innerWidth >= 1024;
         const targetInput = isDesktop ? searchInputRef.current : mobileSearchInputRef.current;
         if (targetInput) {
@@ -69,10 +118,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
-        {/* Brand Logo & Location Pill */}
-        <div className="flex items-center gap-6">
-          <button
-            type="button"
+        {/* Brand Logo & Location Pill & Kitchens Nav Link */}
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Link
+            to="/"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-2.5 group cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg p-1 -m-1"
             aria-label="QuickMunch homepage"
@@ -83,7 +132,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="font-serif text-2xl font-bold tracking-tight text-primary">
               Quick<span className="text-terracotta">Munch</span>
             </span>
-          </button>
+          </Link>
 
           {/* Location Selector (Desktop) */}
           <motion.button
@@ -106,11 +155,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
           </motion.button>
+
+          {/* Kitchens Nav Link */}
+          <Link
+            to="/restaurants"
+            className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              isListingPage
+                ? 'bg-primary text-cream shadow-warm-sm'
+                : 'text-charcoal hover:bg-white border border-transparent hover:border-cream-border'
+            }`}
+          >
+            <UtensilsCrossed size={13} className={isListingPage ? 'text-cream' : 'text-primary'} />
+            <span>Kitchens</span>
+          </Link>
         </div>
 
         {/* Center Search Bar with expanding focus */}
         <div className="hidden lg:flex flex-1 max-w-md mx-4">
-          <div className="relative w-full group">
+          <form onSubmit={handleSearchSubmit} className="relative w-full group">
             <Search
               size={15}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-charcoal-muted group-focus-within:text-primary transition-colors pointer-events-none"
@@ -119,16 +181,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               ref={searchInputRef}
               type="text"
               placeholder="Search wood-fired pizza, tonkotsu, pasta, matcha..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={activeSearchQuery}
+              onChange={(e) => handleSearchInputChange(e.target.value)}
               aria-label="Search dishes and kitchens"
               aria-keyshortcuts="Control+K Meta+K"
               className="w-full bg-white text-xs sm:text-sm text-charcoal placeholder:text-charcoal-faint border border-cream-border focus:border-primary focus:ring-2 focus:ring-primary/10 rounded-full py-2 pl-9 pr-9 outline-none transition-all shadow-warm-sm"
             />
-            {searchQuery ? (
+            {activeSearchQuery ? (
               <button
                 type="button"
-                onClick={() => onSearchChange('')}
+                onClick={() => handleSearchInputChange('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-muted hover:text-charcoal p-0.5 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
                 aria-label="Clear search query"
               >
@@ -142,7 +204,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ⌘K
               </span>
             )}
-          </div>
+          </form>
         </div>
 
         {/* Right Navigation Actions */}
@@ -204,7 +266,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Search Bar sub-row */}
       <div className="lg:hidden px-4 pb-3">
-        <div className="relative w-full">
+        <form onSubmit={handleSearchSubmit} className="relative w-full">
           <Search
             size={15}
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-charcoal-muted pointer-events-none"
@@ -213,22 +275,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             ref={mobileSearchInputRef}
             type="text"
             placeholder="Search kitchens, dishes, sourdough, tonkotsu..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={activeSearchQuery}
+            onChange={(e) => handleSearchInputChange(e.target.value)}
             aria-label="Search dishes and kitchens"
             className="w-full bg-white text-xs text-charcoal placeholder:text-charcoal-faint border border-cream-border rounded-lg py-2.5 pl-9 pr-9 outline-none shadow-warm-sm focus:border-primary focus:ring-1 focus:ring-primary"
           />
-          {searchQuery && (
+          {activeSearchQuery && (
             <button
               type="button"
-              onClick={() => onSearchChange('')}
+              onClick={() => handleSearchInputChange('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-charcoal-muted p-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
               aria-label="Clear mobile search query"
             >
               <X size={14} />
             </button>
           )}
-        </div>
+        </form>
       </div>
     </header>
   );

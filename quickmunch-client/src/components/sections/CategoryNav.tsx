@@ -140,59 +140,54 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   return (
     <section className="w-full py-8 border-y border-cream-border/60 bg-cream-card/40 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-charcoal">
-              Explore by Culinary Craft
-            </h2>
-            <span className="hidden sm:inline-block text-xs bg-white border border-cream-border px-2.5 py-0.5 rounded-full font-medium text-charcoal-muted tabular-nums shadow-warm-sm">
-              48 Artisan Kitchens
-            </span>
-          </div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-serif text-lg sm:text-xl font-bold text-charcoal">
+            Categories
+          </h2>
 
           {/* Desktop Arrow Controls */}
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => scrollByAmount(-300)}
               disabled={!canScrollLeft}
               aria-label="Previous categories"
-              className={`w-8 h-8 rounded-full border border-cream-border bg-white text-charcoal flex items-center justify-center transition-all shadow-warm-sm ${
+              className={`w-7 h-7 rounded-full border border-cream-border bg-white text-charcoal flex items-center justify-center transition-all shadow-warm-sm ${
                 canScrollLeft
                   ? 'hover:bg-cream-dark hover:border-charcoal/20 cursor-pointer active:scale-95'
-                  : 'opacity-35 cursor-not-allowed'
+                  : 'opacity-30 cursor-not-allowed'
               }`}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={14} />
             </button>
             <button
               type="button"
               onClick={() => scrollByAmount(300)}
               disabled={!canScrollRight}
               aria-label="Next categories"
-              className={`w-8 h-8 rounded-full border border-cream-border bg-white text-charcoal flex items-center justify-center transition-all shadow-warm-sm ${
+              className={`w-7 h-7 rounded-full border border-cream-border bg-white text-charcoal flex items-center justify-center transition-all shadow-warm-sm ${
                 canScrollRight
                   ? 'hover:bg-cream-dark hover:border-charcoal/20 cursor-pointer active:scale-95'
-                  : 'opacity-35 cursor-not-allowed'
+                  : 'opacity-30 cursor-not-allowed'
               }`}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={14} />
             </button>
           </div>
         </div>
 
         {/* Carousel Track with Gradient Fades & Dragging */}
         <div className="relative">
-          {/* Left subtle gradient fade for desktop */}
+          {/* Left subtle gradient fade */}
           <div
-            className={`pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-r from-cream/90 to-transparent z-10 transition-opacity duration-300 ${
+            className={`pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-cream/90 to-transparent z-10 transition-opacity duration-300 ${
               canScrollLeft ? 'opacity-100' : 'opacity-0'
             }`}
           />
 
-          {/* Right subtle gradient fade for desktop */}
+          {/* Right subtle gradient fade */}
           <div
-            className={`pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-l from-cream/90 to-transparent z-10 transition-opacity duration-300 ${
+            className={`pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-cream/90 to-transparent z-10 transition-opacity duration-300 ${
               canScrollRight ? 'opacity-100' : 'opacity-0'
             }`}
           />
@@ -204,7 +199,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUpOrLeave}
             onMouseLeave={handleMouseUpOrLeave}
-            className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none py-1 px-1 cursor-grab active:cursor-grabbing select-none scroll-smooth"
+            className="flex items-center gap-2.5 overflow-x-auto pb-1.5 scrollbar-none py-1 px-1 cursor-grab active:cursor-grabbing select-none scroll-smooth"
           >
             {categories.map((category) => {
               const isSelected = selectedCategory === category.id;
@@ -215,16 +210,16 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                     pillRefs.current[category.id] = el;
                   }}
                   whileTap={{ scale: 0.96 }}
-                  whileHover={{ y: -2 }}
+                  whileHover={{ y: -1 }}
                   onClick={() => handlePillClick(category.id)}
-                  className={`relative shrink-0 flex items-center gap-3 p-2 pr-4 rounded-full border transition-all duration-200 cursor-pointer ${
+                  className={`relative shrink-0 flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-full border transition-all duration-150 cursor-pointer text-xs font-medium select-none min-h-[42px] ${
                     isSelected
-                      ? 'bg-primary text-cream border-primary shadow-warm'
+                      ? 'bg-primary text-cream border-primary shadow-warm-sm'
                       : 'bg-white text-charcoal border-cream-border hover:border-cream-dark hover:bg-cream-surface shadow-warm-sm'
                   }`}
                 >
                   {/* Visual Category Photo Thumbnail */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-cream-dark border border-white/20">
+                  <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-cream-dark border border-cream-border/60">
                     <img
                       src={category.image}
                       alt={category.name}
@@ -234,18 +229,9 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                     />
                   </div>
 
-                  <div className="text-left">
-                    <span className="block text-xs font-semibold whitespace-nowrap leading-tight">
-                      {category.name}
-                    </span>
-                    <span
-                      className={`block text-[10px] tabular-nums ${
-                        isSelected ? 'text-cream/80' : 'text-charcoal-muted'
-                      }`}
-                    >
-                      {category.count} kitchens
-                    </span>
-                  </div>
+                  <span className="whitespace-nowrap font-semibold">
+                    {category.name}
+                  </span>
                 </motion.button>
               );
             })}

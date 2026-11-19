@@ -1,22 +1,31 @@
 import React, { useEffect } from 'react';
-import { MapPin, Sparkles, BookOpen, ShieldCheck, Leaf, ChevronRight } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { MapPin, UtensilsCrossed, Home, ShieldCheck, ChevronRight } from 'lucide-react';
 import type { DeliveryAddress } from '../../types';
+import { useCart } from '../../context/CartContext';
 
 export interface MobileNavProps {
   isOpen: boolean;
   onClose: () => void;
-  currentAddress: DeliveryAddress;
-  onOpenLocationModal: () => void;
-  onScrollToSection: (sectionId: string) => void;
+  currentAddress?: DeliveryAddress;
+  onOpenLocationModal?: () => void;
+  onScrollToSection?: (sectionId: string) => void;
 }
 
 export const MobileNav: React.FC<MobileNavProps> = ({
   isOpen,
   onClose,
-  currentAddress,
-  onOpenLocationModal,
+  currentAddress: controlledAddress,
+  onOpenLocationModal: controlledOpenLocationModal,
   onScrollToSection,
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const cart = useCart();
+
+  const currentAddress = controlledAddress ?? cart.currentAddress;
+  const onOpenLocationModal = controlledOpenLocationModal ?? (() => cart.setIsLocationModalOpen(true));
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -32,12 +41,19 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
   if (!isOpen) return null;
 
-  const links = [
-    { label: 'Artisan Kitchens', icon: <Sparkles size={18} className="text-terracotta" />, sectionId: 'kitchens' },
-    { label: 'Featured Spotlight', icon: <BookOpen size={18} className="text-primary" />, sectionId: 'spotlight' },
-    { label: 'Signature Dishes', icon: <Leaf size={18} className="text-primary" />, sectionId: 'dishes' },
-    { label: 'Courier Dispatch', icon: <ShieldCheck size={18} className="text-terracotta" />, sectionId: 'dispatch' },
-  ];
+  const handleNavClick = (path: string, sectionId?: string) => {
+    onClose();
+    if (sectionId && location.pathname === '/') {
+      if (onScrollToSection) {
+        onScrollToSection(sectionId);
+      } else {
+        const el = document.getElementById(sectionId);
+        el?.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      navigate(path);
+    }
+  };
 
   return (
     <div
@@ -74,24 +90,46 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         </button>
 
         {/* Navigation list */}
-        <nav className="space-y-1" aria-label="Mobile section navigation">
-          {links.map((link) => (
-            <button
-              key={link.label}
-              type="button"
-              onClick={() => {
-                onClose();
-                onScrollToSection(link.sectionId);
-              }}
-              className="w-full flex items-center justify-between p-3.5 rounded-lg text-sm font-medium text-charcoal hover:bg-cream-surface transition-colors cursor-pointer text-left min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <div className="flex items-center gap-3">
-                {link.icon}
-                <span>{link.label}</span>
-              </div>
-              <ChevronRight size={14} className="text-charcoal-muted" />
-            </button>
-          ))}
+        <nav className="space-y-1" aria-label="Mobile route navigation">
+          <Link
+            to="/"
+            onClick={() => onClose()}
+            className={`w-full flex items-center justify-between p-3.5 rounded-lg text-sm font-medium transition-colors cursor-pointer text-left min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              location.pathname === '/' ? 'bg-primary-surface/40 text-primary font-semibold' : 'text-charcoal hover:bg-cream-surface'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Home size={18} className="text-primary" />
+              <span>Home Discovery</span>
+            </div>
+            <ChevronRight size={14} className="text-charcoal-muted" />
+          </Link>
+
+          <Link
+            to="/restaurants"
+            onClick={() => onClose()}
+            className={`w-full flex items-center justify-between p-3.5 rounded-lg text-sm font-medium transition-colors cursor-pointer text-left min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              location.pathname === '/restaurants' ? 'bg-primary-surface/40 text-primary font-semibold' : 'text-charcoal hover:bg-cream-surface'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <UtensilsCrossed size={18} className="text-terracotta" />
+              <span>All Artisan Kitchens</span>
+            </div>
+            <ChevronRight size={14} className="text-charcoal-muted" />
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => handleNavClick('/', 'dispatch')}
+            className="w-full flex items-center justify-between p-3.5 rounded-lg text-sm font-medium text-charcoal hover:bg-cream-surface transition-colors cursor-pointer text-left min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <div className="flex items-center gap-3">
+              <ShieldCheck size={18} className="text-primary" />
+              <span>Direct Courier Dispatch</span>
+            </div>
+            <ChevronRight size={14} className="text-charcoal-muted" />
+          </button>
         </nav>
 
         {/* Editorial Note */}
