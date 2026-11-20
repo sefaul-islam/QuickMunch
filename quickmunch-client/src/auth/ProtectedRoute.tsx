@@ -1,14 +1,16 @@
 import React, { useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ShieldCheck } from 'lucide-react';
+import type { AppRole } from './jwt';
 
 export interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredRole?: AppRole | AppRole[];
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, isLoggingOut, login } = useAuth();
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
+  const { isAuthenticated, isLoading, isLoggingOut, login, appRoles, activeRole } = useAuth();
   const location = useLocation();
   const loginTriggeredRef = useRef(false);
 
@@ -72,6 +74,50 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         </button>
       </div>
     );
+  }
+
+  // Authenticated state: verify role permissions if requiredRole specified
+  const safeAppRoles = appRoles || [];
+
+  if (requiredRole) {
+    if (safeAppRoles.length === 0) {
+      return <Navigate to="/unauthorized" replace state={{ reason: 'NO_ROLES' }} />;
+    }
+
+    const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    const userHasPermission = requiredRoles.some((role) => safeAppRoles.includes(role));
+
+    // If user lacks permission in Keycloak token, block access
+    if (!userHasPermission) {
+      return (
+        <Navigate
+          to="/unauthorized"
+          replace
+          state={{
+            from: location.pathname + location.search,
+            requiredRole,
+            reason: 'MISSING_PERMISSION',
+          }}
+        />
+      );
+    }
+
+    // User possesses the role, but activeRole is not currently set to it.
+    // NEVER automatically change activeRole: redirect to /select-role for explicit selection.
+    const isActiveRoleMatching = activeRole && requiredRoles.includes(activeRole);
+    if (!isActiveRoleMatching) {
+      return (
+        <Navigate
+          to="/select-role"
+          replace
+          state={{
+            from: location.pathname + location.search,
+            requiredRole: requiredRoles[0],
+            reason: 'ROLE_MISMATCH',
+          }}
+        />
+      );
+    }
   }
 
   return <>{children}</>;

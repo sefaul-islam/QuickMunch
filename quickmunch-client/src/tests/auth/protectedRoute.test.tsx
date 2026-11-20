@@ -9,12 +9,19 @@ const mockLogout = vi.fn();
 const mockGetAccessToken = vi.fn();
 const mockRefreshProfile = vi.fn();
 
+const mockSelectRole = vi.fn();
+const mockClearActiveRole = vi.fn();
+
 const createMockAuth = (overrides?: Partial<AuthContextValue>): AuthContextValue => ({
   isAuthenticated: false,
   isLoading: false,
   isLoggingOut: false,
   user: null,
   roles: [],
+  appRoles: [],
+  activeRole: null,
+  selectRole: mockSelectRole,
+  clearActiveRole: mockClearActiveRole,
   login: mockLogin,
   logout: mockLogout,
   getAccessToken: mockGetAccessToken,

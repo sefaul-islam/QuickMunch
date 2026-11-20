@@ -1,9 +1,40 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { keycloak, initKeycloak, clearKeycloakSession } from './keycloak';
 import { AuthContext, type UserProfile, type AuthContextValue } from './AuthContext';
+import {
+  decodeJwt,
+  extractRealmRoles,
+  extractAppRoles,
+  normalizeRole,
+  type AppRole,
+} from './jwt';
 import { usersApi } from '../api/users';
 import { setTokenGetter, setUnauthorizedHandler } from '../api/client';
 import { clearUserServerCache } from '../api/queryClient';
+
+const ACTIVE_ROLE_STORAGE_KEY = 'quickmunch_active_role';
+
+// Helper to safely read non-sensitive active role preference from sessionStorage
+const getStoredActiveRolePreference = (): AppRole | null => {
+  try {
+    const raw = sessionStorage.getItem(ACTIVE_ROLE_STORAGE_KEY);
+    return raw ? normalizeRole(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const storeActiveRolePreference = (role: AppRole | null) => {
+  try {
+    if (role) {
+      sessionStorage.setItem(ACTIVE_ROLE_STORAGE_KEY, role);
+    } else {
+      sessionStorage.removeItem(ACTIVE_ROLE_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore environments where sessionStorage is unavailable
+  }
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -11,6 +42,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
+  const [appRoles, setAppRoles] = useState<AppRole[]>([]);
+  const [activeRole, setActiveRole] = useState<AppRole | null>(() => getStoredActiveRolePreference());
   const [error, setError] = useState<string | null>(null);
 
   const isAuthenticatedRef = useRef<boolean>(false);
@@ -24,12 +57,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoggingOutRef.current = isLoggingOut;
   }, [isLoggingOut]);
 
+  // Derives current roles directly from the authenticated Keycloak access token
+  const syncRolesFromToken = useCallback((): { rawRoles: string[]; parsedAppRoles: AppRole[] } => {
+    const decoded = decodeJwt(keycloak.token);
+    const rawRoles = decoded
+      ? extractRealmRoles(decoded)
+      : (keycloak.tokenParsed?.realm_access?.roles as string[]) || [];
+
+    const parsedAppRoles = extractAppRoles(rawRoles);
+    return { rawRoles, parsedAppRoles };
+  }, []);
+
   // Helper to extract fallback profile from Keycloak token parsed claims
   const extractTokenProfile = useCallback((): UserProfile | null => {
-    if (!keycloak.tokenParsed) return null;
-    const p = keycloak.tokenParsed as Record<string, unknown>;
+    const decoded = decodeJwt(keycloak.token);
+    const p = (decoded || keycloak.tokenParsed || {}) as Record<string, unknown>;
     const realmAccess = p.realm_access as { roles?: string[] } | undefined;
     const extractedRoles = realmAccess?.roles || [];
+
+    if (!p.sub && !keycloak.authenticated) return null;
 
     return {
       id: (p.sub as string) || 'unknown',
@@ -45,10 +91,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Internal helper to terminate local state and clear Keycloak/QueryClient tokens
   const handleLocalSessionTermination = useCallback(async () => {
     clearUserServerCache();
+    storeActiveRolePreference(null);
     isAuthenticatedRef.current = false;
     setIsAuthenticated(false);
     setUser(null);
     setRoles([]);
+    setAppRoles([]);
+    setActiveRole(null);
     setError(null);
     await clearKeycloakSession();
   }, []);
@@ -92,6 +141,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [extractTokenProfile]);
 
+  // ONLY intentional way to change activeRole
+  const selectRole = useCallback((role: AppRole) => {
+    const { parsedAppRoles } = syncRolesFromToken();
+    if (parsedAppRoles.includes(role)) {
+      setActiveRole(role);
+      storeActiveRolePreference(role);
+    } else {
+      console.warn(`[QuickMunch Auth] Cannot select role ${role}: user does not possess this role in Keycloak token`);
+    }
+  }, [syncRolesFromToken]);
+
+  const clearActiveRole = useCallback(() => {
+    setActiveRole(null);
+    storeActiveRolePreference(null);
+  }, []);
+
   // Login via Keycloak Authorization Code Flow with PKCE
   const login = useCallback(async (options?: { redirectUri?: string }) => {
     if (isLoggingOutRef.current) return;
@@ -107,12 +172,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const redirectUri = options?.redirectUri || window.location.origin + '/';
 
-    // 1. Invalidate local React state & cached server queries
+    // 1. Invalidate local React state & cached server queries & stored activeRole
     clearUserServerCache();
+    storeActiveRolePreference(null);
     isAuthenticatedRef.current = false;
     setIsAuthenticated(false);
     setUser(null);
     setRoles([]);
+    setAppRoles([]);
+    setActiveRole(null);
     setError(null);
 
     // 2. Delegate to Keycloak OIDC session termination BEFORE clearing in-memory idToken,
@@ -158,10 +226,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     keycloak.onTokenExpired = () => {
       if (isMounted && !isLoggingOutRef.current) {
-        keycloak.updateToken(30).catch(() => {
-          console.warn('[QuickMunch Auth] Keycloak token expired and could not be refreshed');
-          handleLocalSessionTermination();
-        });
+        keycloak.updateToken(30)
+          .then(() => {
+            if (isMounted) {
+              // Resynchronize roles on token refresh (handles role revocation or updates)
+              const { rawRoles, parsedAppRoles } = syncRolesFromToken();
+              setRoles(rawRoles);
+              setAppRoles(parsedAppRoles);
+
+              // Validate currently active role against updated claims
+              setActiveRole((currentActive) => {
+                if (currentActive && parsedAppRoles.includes(currentActive)) {
+                  return currentActive;
+                }
+                if (parsedAppRoles.length === 1) {
+                  const single = parsedAppRoles[0];
+                  storeActiveRolePreference(single);
+                  return single;
+                }
+                storeActiveRolePreference(null);
+                return null;
+              });
+            }
+          })
+          .catch(() => {
+            console.warn('[QuickMunch Auth] Keycloak token expired and could not be refreshed');
+            handleLocalSessionTermination();
+          });
       }
     };
 
@@ -173,8 +264,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (authenticated) {
           isAuthenticatedRef.current = true;
           setIsAuthenticated(true);
-          const parsedRoles = (keycloak.tokenParsed?.realm_access as { roles?: string[] })?.roles || [];
-          setRoles(parsedRoles);
+
+          // Extract roles from authenticated access token
+          const { rawRoles, parsedAppRoles } = syncRolesFromToken();
+          setRoles(rawRoles);
+          setAppRoles(parsedAppRoles);
+
+          // Evaluate active role based on user roles and stored preference
+          const storedPreference = getStoredActiveRolePreference();
+          if (storedPreference && parsedAppRoles.includes(storedPreference)) {
+            // Restore valid stored preference
+            setActiveRole(storedPreference);
+          } else if (parsedAppRoles.length === 1) {
+            // Scenario A: Single role -> Automatically assign active role
+            const singleRole = parsedAppRoles[0];
+            setActiveRole(singleRole);
+            storeActiveRolePreference(singleRole);
+          } else {
+            // Scenario B (multiple roles) or no recognized roles:
+            // Must explicitly select role -> do not auto-select first role
+            setActiveRole(null);
+            storeActiveRolePreference(null);
+          }
 
           // Retrieve user profile
           try {
@@ -191,6 +302,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAuthenticated(false);
           setUser(null);
           setRoles([]);
+          setAppRoles([]);
+          setActiveRole(null);
+          storeActiveRolePreference(null);
         }
       } catch (err) {
         if (isMounted) {
@@ -199,6 +313,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isAuthenticatedRef.current = false;
           setIsAuthenticated(false);
           setUser(null);
+          setRoles([]);
+          setAppRoles([]);
+          setActiveRole(null);
+          storeActiveRolePreference(null);
         }
       } finally {
         if (isMounted) {
@@ -215,7 +333,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       keycloak.onAuthRefreshError = undefined;
       keycloak.onTokenExpired = undefined;
     };
-  }, [getAccessToken, extractTokenProfile, handleLocalSessionTermination]);
+  }, [getAccessToken, extractTokenProfile, handleLocalSessionTermination, syncRolesFromToken]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -224,13 +342,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoggingOut,
       user,
       roles,
+      appRoles,
+      activeRole,
+      selectRole,
+      clearActiveRole,
       login,
       logout,
       getAccessToken,
       refreshProfile,
       error,
     }),
-    [isAuthenticated, isLoading, isLoggingOut, user, roles, login, logout, getAccessToken, refreshProfile, error]
+    [
+      isAuthenticated,
+      isLoading,
+      isLoggingOut,
+      user,
+      roles,
+      appRoles,
+      activeRole,
+      selectRole,
+      clearActiveRole,
+      login,
+      logout,
+      getAccessToken,
+      refreshProfile,
+      error,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

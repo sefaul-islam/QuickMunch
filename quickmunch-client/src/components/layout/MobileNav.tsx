@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { MapPin, UtensilsCrossed, Home, ShieldCheck, ChevronRight, User, LogOut } from 'lucide-react';
+import { MapPin, UtensilsCrossed, Home, ShieldCheck, ChevronRight, User, LogOut, LayoutDashboard, Repeat } from 'lucide-react';
 import type { DeliveryAddress } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../hooks/useAuth';
+import { APP_ROLES } from '../../auth/jwt';
 
 export interface MobileNavProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const cart = useCart();
-  const { isAuthenticated, user, login, logout } = useAuth();
+  const { isAuthenticated, user, login, logout, appRoles, activeRole } = useAuth();
 
   const currentAddress = controlledAddress ?? cart.currentAddress;
   const onOpenLocationModal = controlledOpenLocationModal ?? (() => cart.setIsLocationModalOpen(true));
@@ -164,14 +165,49 @@ export const MobileNav: React.FC<MobileNavProps> = ({
                       {(user?.firstName || user?.email || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div className="leading-tight truncate">
-                      <span className="block font-semibold">
-                        {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'My Profile'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">
+                          {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'My Profile'}
+                        </span>
+                        {activeRole && (
+                          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-primary-surface text-primary">
+                            {APP_ROLES[activeRole].badge}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[11px] text-charcoal-muted truncate block">{user?.email}</span>
                     </div>
                   </div>
                   <ChevronRight size={14} className="text-charcoal-muted" />
                 </Link>
+
+                {/* Dashboard Link */}
+                <Link
+                  to={activeRole ? APP_ROLES[activeRole].path : '/select-role'}
+                  onClick={() => onClose()}
+                  className="w-full flex items-center justify-between p-3.5 rounded-lg text-sm font-medium text-charcoal hover:bg-cream-surface transition-colors cursor-pointer text-left min-h-[48px]"
+                >
+                  <div className="flex items-center gap-3">
+                    <LayoutDashboard size={18} className="text-primary" />
+                    <span>My Dashboard</span>
+                  </div>
+                  <ChevronRight size={14} className="text-charcoal-muted" />
+                </Link>
+
+                {/* Switch Role Link (only if user has multiple roles) */}
+                {appRoles.length > 1 && (
+                  <Link
+                    to="/select-role"
+                    onClick={() => onClose()}
+                    className="w-full flex items-center justify-between p-3.5 rounded-lg text-sm font-medium text-charcoal hover:bg-cream-surface transition-colors cursor-pointer text-left min-h-[48px]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Repeat size={18} className="text-terracotta" />
+                      <span>Switch Active Role</span>
+                    </div>
+                    <ChevronRight size={14} className="text-charcoal-muted" />
+                  </Link>
+                )}
 
                 <button
                   type="button"

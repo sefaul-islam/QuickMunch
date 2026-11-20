@@ -1,0 +1,68 @@
+
+:root {
+    --qm-primary: #173D32;
+    --qm-primary-hover: #245747;
+    --qm-accent: #D98245;
+    --qm-background: #F8F5EF;
+    --qm-text: #24352E;
+}
+
+/* Page background */
+.pf-v5-c-login {
+    background: var(--qm-background) !important;
+}
+
+/* Login container */
+.pf-v5-c-login__main {
+    border-radius: 18px !important;
+    box-shadow: 0 12px 40px rgba(23, 61, 50, 0.10) !important;
+    overflow: hidden;
+}
+
+/* Login header */
+.pf-v5-c-login__main-header {
+    border-top: 4px solid var(--qm-primary) !important;
+}
+
+#kc-page-title {
+    color: var(--qm-primary) !important;
+    font-weight: 700 !important;
+}
+
+/* Input fields */
+.pf-v5-c-form-control {
+    border-radius: 9px !important;
+    min-height: 44px;
+}
+
+/* Login button */
+#kc-login,
+.pf-v5-c-button.pf-m-primary {
+    background: var(--qm-primary) !important;
+    border-color: var(--qm-primary) !important;
+    border-radius: 9px !important;
+    font-weight: 600 !important;
+    min-height: 45px;
+}
+
+#kc-login:hover,
+.pf-v5-c-button.pf-m-primary:hover {
+    background: var(--qm-primary-hover) !important;
+    border-color: var(--qm-primary-hover) !important;
+}
+
+/* Links */
+a {
+    color: var(--qm-primary);
+}
+
+/* Text */
+.pf-v5-c-login,
+.pf-v5-c-login__main {
+    color: var(--qm-text);
+}
+
+/* Accent */
+.pf-v5-c-login__main-header::before {
+    background: var(--qm-accent);
+}

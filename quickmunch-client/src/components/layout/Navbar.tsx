@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { ShoppingBag, MapPin, ChevronDown, Search, Menu, X, User, UtensilsCrossed, LogOut } from 'lucide-react';
+import { ShoppingBag, MapPin, ChevronDown, Search, Menu, X, User, UtensilsCrossed, LogOut, LayoutDashboard, Repeat } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { DeliveryAddress, CartItem } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../hooks/useAuth';
+import { APP_ROLES } from '../../auth/jwt';
 
 export interface NavbarProps {
   currentAddress?: DeliveryAddress;
@@ -32,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const cartContext = useCart();
-  const { isAuthenticated, user, login, logout } = useAuth();
+  const { isAuthenticated, user, login, logout, appRoles, activeRole } = useAuth();
 
   // Resolve controlled props vs context
   const currentAddress = controlledAddress ?? cartContext.currentAddress;
@@ -235,14 +236,40 @@ export const Navbar: React.FC<NavbarProps> = ({
               </Link>
 
               {/* Dropdown Menu on hover/focus */}
-              <div className="absolute right-0 top-full pt-1.5 w-48 hidden group-hover:block group-focus-within:block z-50 animate-scale-in">
+              <div className="absolute right-0 top-full pt-1.5 w-52 hidden group-hover:block group-focus-within:block z-50 animate-scale-in">
                 <div className="bg-white rounded-xl shadow-editorial border border-cream-border p-1.5 space-y-1 text-xs">
                   <div className="px-3 py-2 border-b border-cream-border/60">
                     <p className="font-semibold text-charcoal truncate">
                       {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'QuickMunch Member'}
                     </p>
                     <p className="text-[11px] text-charcoal-muted truncate">{user?.email}</p>
+                    {activeRole && (
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-surface text-primary">
+                        {APP_ROLES[activeRole].badge}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Dashboard Link */}
+                  <Link
+                    to={activeRole ? APP_ROLES[activeRole].path : '/select-role'}
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-charcoal hover:bg-cream-surface transition-colors font-medium"
+                  >
+                    <LayoutDashboard size={13} className="text-primary" />
+                    <span>Dashboard</span>
+                  </Link>
+
+                  {/* Switch Role link if user possesses multiple roles */}
+                  {appRoles.length > 1 && (
+                    <Link
+                      to="/select-role"
+                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-charcoal hover:bg-cream-surface transition-colors font-medium"
+                    >
+                      <Repeat size={13} className="text-terracotta" />
+                      <span>Switch Active Role</span>
+                    </Link>
+                  )}
+
                   <Link
                     to="/account"
                     className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-charcoal hover:bg-cream-surface transition-colors font-medium"
