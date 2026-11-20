@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { ShoppingBag, MapPin, ChevronDown, Search, Menu, X, User, UtensilsCrossed } from 'lucide-react';
+import { ShoppingBag, MapPin, ChevronDown, Search, Menu, X, User, UtensilsCrossed, LogOut } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { DeliveryAddress, CartItem } from '../../types';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../hooks/useAuth';
 
 export interface NavbarProps {
   currentAddress?: DeliveryAddress;
@@ -26,19 +27,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSearchChange: controlledSearchChange,
   isMobileMenuOpen,
   onToggleMobileMenu,
-  onAccountClick: controlledAccountClick,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const cartContext = useCart();
+  const { isAuthenticated, user, login, logout } = useAuth();
 
   // Resolve controlled props vs context
   const currentAddress = controlledAddress ?? cartContext.currentAddress;
   const onOpenLocationModal = controlledOpenLocationModal ?? (() => cartContext.setIsLocationModalOpen(true));
   const cartItems = controlledCartItems ?? cartContext.cartItems;
   const onOpenCart = controlledOpenCart ?? (() => cartContext.setIsCartOpen(true));
-  const onAccountClick = controlledAccountClick ?? (() => cartContext.showToast('QuickMunch Member: Preview profile active'));
 
   // Search resolution
   const isListingPage = location.pathname === '/restaurants';
@@ -209,16 +209,59 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Navigation Actions */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Account Button (Desktop) */}
-          <button
-            type="button"
-            onClick={onAccountClick}
-            className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold text-charcoal hover:bg-white border border-transparent hover:border-cream-border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label="Account profile"
-          >
-            <User size={15} className="text-charcoal-muted" />
-            <span>Account</span>
-          </button>
+          {/* Authentication & Account Actions (Desktop) */}
+          {!isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => login()}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white hover:bg-cream-surface text-charcoal border border-cream-border transition-all cursor-pointer shadow-warm-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Log in with Keycloak"
+            >
+              <User size={14} className="text-primary" />
+              <span>Log In</span>
+            </button>
+          ) : (
+            <div className="relative group hidden sm:block">
+              <Link
+                to="/account"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold text-charcoal hover:bg-white border border-transparent hover:border-cream-border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Account profile and settings"
+              >
+                <div className="w-5 h-5 rounded-full bg-primary text-cream flex items-center justify-center text-[10px] font-bold">
+                  {(user?.firstName || user?.email || 'U').charAt(0).toUpperCase()}
+                </div>
+                <span className="max-w-[110px] truncate">{user?.firstName || 'Account'}</span>
+                <ChevronDown size={12} className="text-charcoal-muted" />
+              </Link>
+
+              {/* Dropdown Menu on hover/focus */}
+              <div className="absolute right-0 top-full pt-1.5 w-48 hidden group-hover:block group-focus-within:block z-50 animate-scale-in">
+                <div className="bg-white rounded-xl shadow-editorial border border-cream-border p-1.5 space-y-1 text-xs">
+                  <div className="px-3 py-2 border-b border-cream-border/60">
+                    <p className="font-semibold text-charcoal truncate">
+                      {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'QuickMunch Member'}
+                    </p>
+                    <p className="text-[11px] text-charcoal-muted truncate">{user?.email}</p>
+                  </div>
+                  <Link
+                    to="/account"
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-charcoal hover:bg-cream-surface transition-colors font-medium"
+                  >
+                    <User size={13} className="text-primary" />
+                    <span>Profile & Settings</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => logout({ redirectUri: window.location.origin })}
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-rose-700 hover:bg-rose-50 transition-colors font-medium cursor-pointer text-left"
+                  >
+                    <LogOut size={13} />
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Interactive Dining Bag */}
           <motion.button
