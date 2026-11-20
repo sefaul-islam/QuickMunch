@@ -26,6 +26,3 @@ spring:
 
 server:
   port: ${SERVER_PORT:8081}
-
-cors:
-  allowed-origins: ${CORS_ORIGINS:http://localhost:3000}

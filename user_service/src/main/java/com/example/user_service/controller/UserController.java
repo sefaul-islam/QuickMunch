@@ -26,7 +26,6 @@ public class UserController {
     }
 
     @GetMapping("/me")
-
     public ResponseEntity<UserProfileResponseDTO> getCurrentUser(
             Authentication authentication) {
         // Ensure local user record exists (just-in-time provisioning)

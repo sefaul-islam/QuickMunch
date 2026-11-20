@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { normalizeApiError } from './apiError';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8090';
 
 const parsedTimeout = import.meta.env.VITE_API_TIMEOUT_MS ? Number(import.meta.env.VITE_API_TIMEOUT_MS) : 15000;
 export const API_TIMEOUT_MS = Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? parsedTimeout : 15000;
