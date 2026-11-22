@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 public record FoodItemResponse(
         Long id,
         Long restaurantId,
+        String caetegoryName,
         Long categoryId,
         String name,
         String description,

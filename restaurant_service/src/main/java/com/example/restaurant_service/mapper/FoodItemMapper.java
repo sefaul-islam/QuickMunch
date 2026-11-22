@@ -28,6 +28,7 @@ public final class FoodItemMapper {
         return new FoodItemResponse(
                 foodItem.getId(),
                 foodItem.getRestaurant().getId(),
+                foodItem.getCategory() != null ? foodItem.getCategory().getName() : null,
                 foodItem.getCategory() != null ? foodItem.getCategory().getId() : null,
                 foodItem.getName(),
                 foodItem.getDescription(),
