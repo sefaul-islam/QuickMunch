@@ -2,7 +2,9 @@ package com.example.restaurant_service.service;
 
 import com.example.restaurant_service.dto.request.CreateRestaurantRequest;
 import com.example.restaurant_service.dto.request.UpdateRestaurantRequest;
+import com.example.restaurant_service.dto.request.UploadUrlRequest;
 import com.example.restaurant_service.dto.response.RestaurantResponse;
+import com.example.restaurant_service.dto.response.UploadUrlResponse;
 import com.example.restaurant_service.entity.Restaurant;
 import com.example.restaurant_service.exception.RestaurantHasDependentsException;
 import com.example.restaurant_service.exception.RestaurantNotFoundException;
@@ -11,6 +13,7 @@ import com.example.restaurant_service.mapper.RestaurantMapper;
 import com.example.restaurant_service.repository.CategoryRepository;
 import com.example.restaurant_service.repository.FoodItemRepository;
 import com.example.restaurant_service.repository.RestaurantRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +30,7 @@ public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final FoodItemRepository foodItemRepository;
+    private final S3Service s3Service;
     private final CategoryRepository categoryRepository;
 
 
@@ -112,8 +117,20 @@ public class RestaurantService {
     }
 
     public void verifyOwnership(Restaurant restaurant, String authenticatedUserId) {
-        if (!restaurant.getOwnerId().equals(authenticatedUserId)) {
+        if (!Objects.equals(restaurant.getOwnerId(), authenticatedUserId)) {
             throw new RestaurantOwnershipException(restaurant.getId());
         }
     }
+    public UploadUrlResponse generateUploadUrl(@Valid UploadUrlRequest request,
+                                               Long restaurantId,
+                                               String userId) {
+
+        Restaurant restaurant = findRestaurantOrThrow(restaurantId);
+        verifyOwnership(restaurant, userId);
+        return s3Service.generateUploadUrl(restaurant.getId(), request.contentType());
+    }
+
+
+
+
 }
