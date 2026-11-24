@@ -18,11 +18,14 @@ export const queryKeys = {
 
   restaurants: {
     all: () => [...queryKeys.all, 'restaurants'] as const,
+    my: (ownerId?: string) => [...queryKeys.restaurants.all(), 'my', ownerId ?? 'current'] as const,
     lists: () => [...queryKeys.restaurants.all(), 'list'] as const,
     list: (filters?: Record<string, unknown>) => [...queryKeys.restaurants.lists(), filters ?? {}] as const,
     details: () => [...queryKeys.restaurants.all(), 'detail'] as const,
     detail: (id: string | number) => [...queryKeys.restaurants.details(), String(id)] as const,
     menu: (id: string | number) => [...queryKeys.restaurants.detail(id), 'menu'] as const,
+    categories: (id: string | number) => [...queryKeys.restaurants.detail(id), 'categories'] as const,
+    foods: (id: string | number) => [...queryKeys.restaurants.detail(id), 'foods'] as const,
   },
 
   orders: {

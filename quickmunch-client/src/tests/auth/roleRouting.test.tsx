@@ -1,7 +1,8 @@
+import { useState, useMemo } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import React from 'react';
 import { AuthContext, type AuthContextValue } from '../../auth/AuthContext';
 import { ProtectedRoute } from '../../auth/ProtectedRoute';
 import { RoleSelectionPage } from '../../pages/RoleSelectionPage';
@@ -18,33 +19,71 @@ const mockRefreshProfile = vi.fn();
 const mockSelectRole = vi.fn();
 const mockClearActiveRole = vi.fn();
 
-const createMockAuth = (overrides?: Partial<AuthContextValue>): AuthContextValue => ({
-  isAuthenticated: true,
-  isLoading: false,
-  isLoggingOut: false,
-  user: {
-    id: 'user-789',
-    firstName: 'Jordan',
-    lastName: 'Lee',
-    email: 'jordan@quickmunch.com',
-  },
-  roles: ['CUSTOMER'],
-  appRoles: ['CUSTOMER'],
-  activeRole: 'CUSTOMER',
-  selectRole: mockSelectRole,
-  clearActiveRole: mockClearActiveRole,
-  login: mockLogin,
-  logout: mockLogout,
-  getAccessToken: mockGetAccessToken,
-  refreshProfile: mockRefreshProfile,
-  error: null,
-  ...overrides,
-});
+const createMockAuth = (overrides?: Partial<AuthContextValue>): AuthContextValue => {
+  const auth: AuthContextValue = {
+    isAuthenticated: true,
+    isLoading: false,
+    isLoggingOut: false,
+    user: {
+      id: 'user-789',
+      firstName: 'Jordan',
+      lastName: 'Lee',
+      email: 'jordan@quickmunch.com',
+    },
+    roles: ['CUSTOMER'],
+    appRoles: ['CUSTOMER'],
+    activeRole: 'CUSTOMER',
+    selectRole: (role) => {
+      mockSelectRole(role);
+      auth.activeRole = role;
+    },
+    clearActiveRole: () => {
+      mockClearActiveRole();
+      auth.activeRole = null;
+    },
+    login: mockLogin,
+    logout: mockLogout,
+    getAccessToken: mockGetAccessToken,
+    refreshProfile: mockRefreshProfile,
+    error: null,
+    ...overrides,
+  };
+  return auth;
+};
+
+const TestAuthProvider: React.FC<{ initialAuth: AuthContextValue; children: React.ReactNode }> = ({ initialAuth, children }) => {
+  const [activeRole, setActiveRole] = useState(initialAuth.activeRole);
+  const value = useMemo(() => ({
+    ...initialAuth,
+    activeRole,
+    selectRole: (role: AppRole) => {
+      initialAuth.selectRole(role);
+      setActiveRole(role);
+    },
+    clearActiveRole: () => {
+      initialAuth.clearActiveRole();
+      setActiveRole(null);
+    },
+  }), [initialAuth, activeRole]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
 
 const renderWithTestRoutes = (authValue: AuthContextValue, initialPath = '/select-role') => {
+  const queryClient = createTestQueryClient();
   return render(
-    <AuthContext.Provider value={authValue}>
-      <MemoryRouter initialEntries={[initialPath]}>
+    <QueryClientProvider client={queryClient}>
+      <TestAuthProvider initialAuth={authValue}>
+        <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/" element={<div>Public Home</div>} />
           <Route
@@ -82,7 +121,8 @@ const renderWithTestRoutes = (authValue: AuthContextValue, initialPath = '/selec
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
         </Routes>
       </MemoryRouter>
-    </AuthContext.Provider>
+    </TestAuthProvider>
+    </QueryClientProvider>
   );
 };
 

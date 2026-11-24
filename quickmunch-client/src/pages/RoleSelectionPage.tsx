@@ -9,7 +9,7 @@ export const RoleSelectionPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const destinationState = location.state as { from?: string; requiredRole?: AppRole } | undefined;
+  const destinationState = location.state as { from?: string; requiredRole?: AppRole; reason?: string } | undefined;
 
   // Scenario A: If user has only 1 role, automatically redirect to their dashboard
   useEffect(() => {
@@ -98,7 +98,7 @@ export const RoleSelectionPage: React.FC = () => {
               Welcome to QuickMunch!
             </h1>
             <p className="text-sm sm:text-base text-charcoal-muted max-w-xl mx-auto">
-              How would you like to continue? Choose how you want to use QuickMunch today.
+              Choose how you want to use QuickMunch today.
             </p>
           </div>
 

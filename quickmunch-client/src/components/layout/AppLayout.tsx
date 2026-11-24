@@ -40,6 +40,18 @@ export const AppLayout: React.FC = () => {
     setIsCartOpen(false);
   };
 
+  const isOwnerDashboard = location.pathname.startsWith('/owner/dashboard');
+
+  if (isOwnerDashboard) {
+    return (
+      <div className="min-h-screen flex flex-col bg-cream text-charcoal font-sans selection:bg-primary selection:text-cream">
+        <main className="flex-1">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-cream text-charcoal font-sans selection:bg-primary selection:text-cream">
       {/* Shared Navbar */}

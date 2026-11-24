@@ -19,9 +19,17 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string | number) => `/api/restaurants/${encodeURIComponent(String(id))}`,
     MY: '/api/restaurants/my',
     BY_OWNER: (ownerId: string) => `/api/restaurants/owner/${encodeURIComponent(ownerId)}`,
-    CATEGORIES: '/api/categories',
-    FOOD_ITEMS: '/api/food-items',
-    FOOD_ITEM_BY_ID: (id: string | number) => `/api/food-items/${encodeURIComponent(String(id))}`,
+    STATUS: (id: string | number) => `/api/restaurants/${encodeURIComponent(String(id))}/status`,
+    CATEGORIES: (restaurantId: string | number) => `/api/restaurants/${encodeURIComponent(String(restaurantId))}/categories`,
+    CATEGORY_BY_ID: (restaurantId: string | number, categoryId: string | number) =>
+      `/api/restaurants/${encodeURIComponent(String(restaurantId))}/categories/${encodeURIComponent(String(categoryId))}`,
+    FOODS: (restaurantId: string | number) => `/api/restaurants/${encodeURIComponent(String(restaurantId))}/foods`,
+    FOOD_BY_ID: (restaurantId: string | number, foodId: string | number) =>
+      `/api/restaurants/${encodeURIComponent(String(restaurantId))}/foods/${encodeURIComponent(String(foodId))}`,
+    FOOD_AVAILABILITY: (restaurantId: string | number, foodId: string | number) =>
+      `/api/restaurants/${encodeURIComponent(String(restaurantId))}/foods/${encodeURIComponent(String(foodId))}/availability`,
+    UPLOAD_URL: (restaurantId: string | number) =>
+      `/api/restaurants/${encodeURIComponent(String(restaurantId))}/images/upload-url`,
   },
   ORDERS: {
     BASE: '/api/orders',
