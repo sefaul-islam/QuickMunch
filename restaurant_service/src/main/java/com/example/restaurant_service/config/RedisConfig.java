@@ -1,5 +1,6 @@
 package com.example.restaurant_service.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,8 +9,17 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import tools.jackson.databind.DefaultTyping;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
+import tools.jackson.databind.jsontype.TypeResolverBuilder;
+import tools.jackson.databind.jsontype.impl.DefaultTypeResolverBuilder;
+import tools.jackson.databind.jsontype.impl.StdTypeResolverBuilder;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -23,20 +33,14 @@ public class RedisConfig {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
 
-        GenericJacksonJsonRedisSerializer jacksonJsonRedisSerializer =GenericJacksonJsonRedisSerializer.builder()
-                .enableDefaultTyping(
-                        BasicPolymorphicTypeValidator.builder()
-                                .allowIfSubType("com.example.restaurant_service.")
-                                .allowIfSubType("java.util.")
-                                .allowIfSubType(BigDecimal.class)
-                                .build()
-                ).build();
+
+
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(30))
                 .serializeKeysWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(jacksonJsonRedisSerializer))
+                        RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json()))
                 .disableCachingNullValues();
 
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();

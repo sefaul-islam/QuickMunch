@@ -1,5 +1,6 @@
 package com.example.restaurant_service.dto.response;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -15,6 +16,6 @@ public record FoodItemResponse(
         Boolean isAvailable,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
-) {
+) implements Serializable {
 }
 

@@ -37,8 +37,6 @@ server:
   error:
     include-message: always
 
-cors:
-  allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
 aws:
   s3:
     bucket: quickmunch-assets-prod

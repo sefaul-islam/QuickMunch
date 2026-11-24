@@ -15,6 +15,7 @@ import com.example.restaurant_service.repository.FoodItemRepository;
 import com.example.restaurant_service.repository.RestaurantRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ public class RestaurantService {
 
 
     @Transactional
+    @CacheEvict(value = "restaurants", key = "'all'")
     public RestaurantResponse createRestaurant(CreateRestaurantRequest request,
                                                 String ownerId) {
         Restaurant restaurant = RestaurantMapper.toEntity(request, ownerId);
@@ -62,7 +64,7 @@ public class RestaurantService {
     public List<RestaurantResponse> getRestaurantsByOwner(String ownerId) {
         return restaurantRepository.findByOwnerId(ownerId).stream()
                 .map(RestaurantMapper::toResponse)
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Transactional

@@ -12,7 +12,9 @@ import com.example.restaurant_service.repository.FoodItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FoodItemService {
@@ -51,7 +53,7 @@ public class FoodItemService {
 
         return foodItemRepository.findByRestaurantId(restaurantId).stream()
                 .map(FoodItemMapper::toResponse)
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Transactional(readOnly = true)
