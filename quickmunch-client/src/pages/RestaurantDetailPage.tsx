@@ -18,7 +18,12 @@ import { motion } from 'motion/react';
 import { RESTAURANTS } from '../data/mockData';
 import { useCart } from '../context/CartContext';
 import { useImageFade } from '../hooks/useImageFade';
-import { onRestaurantImgError, onFoodImgError } from '../lib/imageUtils';
+import {
+  onRestaurantImgError,
+  onFoodImgError,
+  resolveImageUrl,
+  FALLBACK_FOOD_IMAGE,
+} from '../lib/imageUtils';
 import type { Dish } from '../types';
 
 export const RestaurantDetailPage: React.FC = () => {
@@ -449,7 +454,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
       {/* Right: Macro Dish Photo */}
       <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-cream-dark shrink-0 relative">
         <img
-          src={dish.image}
+          src={resolveImageUrl(dish.image, FALLBACK_FOOD_IMAGE)}
           alt={dish.name}
           loading="lazy"
           className={`w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 ${dishFade.imgClassName}`}

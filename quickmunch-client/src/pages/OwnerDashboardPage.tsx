@@ -26,6 +26,7 @@ import { RestaurantModal } from '../features/owner/components/RestaurantModal';
 import { FoodItemModal } from '../features/owner/components/FoodItemModal';
 import { CategoryModal } from '../features/owner/components/CategoryModal';
 import { ImageUploadModal } from '../components/food/ImageUploadModal';
+import { FALLBACK_FOOD_IMAGE, FALLBACK_RESTAURANT_IMAGE } from '../lib/imageUtils';
 import { restaurantsApi } from '../api/restaurants';
 import type {
   RestaurantResponse,
@@ -449,6 +450,11 @@ export const OwnerDashboardPage: React.FC = () => {
           }
           description="Uploaded directly to AWS S3 storage via backend presigned upload URL."
           currentImageUrl={imageUploadTarget.currentImageUrl}
+          fallbackImage={
+            imageUploadTarget.type === 'food'
+              ? FALLBACK_FOOD_IMAGE
+              : FALLBACK_RESTAURANT_IMAGE
+          }
           onSuccess={handleImageUploaded}
         />
       )}

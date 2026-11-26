@@ -6,7 +6,8 @@ import {
   validateImageFile,
   formatFileSize,
   resolveImageUrl,
-  onRestaurantImgError,
+  FALLBACK_RESTAURANT_IMAGE,
+  makeImgErrorHandler,
 } from '../../lib/imageUtils';
 import { restaurantsApi } from '../../api/restaurants';
 
@@ -17,6 +18,7 @@ export interface ImageUploadModalProps {
   title?: string;
   description?: string;
   currentImageUrl?: string | null;
+  fallbackImage?: string;
   onSuccess: (objectKey: string) => void;
 }
 
@@ -27,6 +29,7 @@ export const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   title = 'Upload Image',
   description = 'Upload a high-resolution JPEG, PNG, or WebP image (max 5MB).',
   currentImageUrl,
+  fallbackImage = FALLBACK_RESTAURANT_IMAGE,
   onSuccess,
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -270,9 +273,9 @@ export const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
             {/* Image Preview Card */}
             <div className="relative rounded-2xl overflow-hidden border border-cream-border bg-charcoal/5 max-h-64 flex items-center justify-center shadow-warm-sm">
               <img
-                src={previewUrl || resolveImageUrl(currentImageUrl)}
+                src={previewUrl || resolveImageUrl(currentImageUrl, fallbackImage)}
                 alt="Upload Preview"
-                onError={onRestaurantImgError}
+                onError={makeImgErrorHandler(fallbackImage)}
                 className="w-full h-56 object-cover"
               />
 

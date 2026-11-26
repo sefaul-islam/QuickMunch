@@ -4,12 +4,25 @@ import React from 'react';
 export const FALLBACK_RESTAURANT_IMAGE =
   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80';
 
-/** Generic food/dish fallback — a warm bowl of food */
+/** Neutral QuickMunch-themed food/dish fallback data URI */
 export const FALLBACK_FOOD_IMAGE =
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80';
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">' +
+      '<rect width="400" height="300" fill="#FAF7F2"/>' +
+      '<rect x="2" y="2" width="396" height="296" rx="14" fill="#FAF7F2" stroke="#E8E1D3" stroke-width="2"/>' +
+      '<circle cx="200" cy="126" r="46" fill="#E8EFEA"/>' +
+      '<path d="M165 146c0-19.33 15.67-35 35-35s35 15.67 35 35H165z" fill="#173D32"/>' +
+      '<circle cx="200" cy="107" r="4.5" fill="#D98245"/>' +
+      '<rect x="157" y="150" width="86" height="5" rx="2.5" fill="#173D32"/>' +
+      '<text x="200" y="202" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif" font-size="12" font-weight="600" fill="#626661" letter-spacing="0.4">QuickMunch Dish</text>' +
+      '</svg>',
+  );
 
 /** AWS S3 asset host configuration matching backend */
-export const S3_ASSETS_BASE_URL = 'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com';
+export const S3_ASSETS_BASE_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_S3_BASE_URL) ||
+  'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com';
 
 /** Accepted image mime types enforced by restaurant-service */
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
@@ -42,18 +55,28 @@ export function resolveImageUrl(
     return clean;
   }
 
-  // AWS S3 object key (e.g. "restaurants/1/uuid.jpg")
-  if (clean.startsWith('restaurants/')) {
-    return `${S3_ASSETS_BASE_URL}/${clean}`;
+  const baseUrl = S3_ASSETS_BASE_URL.replace(/\/+$/, '');
+  const normalizedKey = clean.replace(/^\/+/, '');
+
+  // AWS S3 object key (e.g. "restaurants/1/uuid.jpg" or "/restaurants/1/uuid.jpg")
+  if (normalizedKey.startsWith('restaurants/')) {
+    return `${baseUrl}/${normalizedKey}`;
   }
 
-  // Relative path starting with slash
-  if (clean.startsWith('/')) {
+  // Relative public asset path starting with slash (e.g. "/favicon.svg")
+  if (clean.startsWith('/') && !clean.startsWith('/restaurants/')) {
     return clean;
   }
 
   // Fallback as S3 key
-  return `${S3_ASSETS_BASE_URL}/${clean}`;
+  return `${baseUrl}/${normalizedKey}`;
+}
+
+/**
+ * Convenience function for resolving food item images with the neutral QuickMunch food fallback
+ */
+export function resolveFoodImageUrl(imageUrl?: string | null): string {
+  return resolveImageUrl(imageUrl, FALLBACK_FOOD_IMAGE);
 }
 
 /**

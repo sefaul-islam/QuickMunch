@@ -7,6 +7,7 @@ import {
   resolveImageUrl,
   FALLBACK_RESTAURANT_IMAGE,
   onRestaurantImgError,
+  makeImgErrorHandler,
 } from '../../lib/imageUtils';
 import { restaurantsApi } from '../../api/restaurants';
 
@@ -158,6 +159,7 @@ export const NativeImagePicker: React.FC<NativeImagePickerProps> = ({
 
   const hasExistingImage = !!value && value.trim() !== '';
   const displayImage = previewUrl || (hasExistingImage ? resolveImageUrl(value, fallbackImage) : null);
+  const imgErrorHandler = fallbackImage ? makeImgErrorHandler(fallbackImage) : onRestaurantImgError;
 
   return (
     <div className="space-y-2">
@@ -207,7 +209,7 @@ export const NativeImagePicker: React.FC<NativeImagePickerProps> = ({
               <img
                 src={resolveImageUrl(manualUrl, fallbackImage)}
                 alt="URL Preview"
-                onError={onRestaurantImgError}
+                onError={imgErrorHandler}
                 className="w-14 h-10 object-cover rounded-lg border border-cream-border"
               />
               <span className="text-[11px] text-charcoal-muted truncate">
@@ -268,7 +270,7 @@ export const NativeImagePicker: React.FC<NativeImagePickerProps> = ({
                   <img
                     src={displayImage}
                     alt="Selected Preview"
-                    onError={onRestaurantImgError}
+                    onError={imgErrorHandler}
                     className="w-full h-full object-cover"
                   />
                   {!isUploading && (
