@@ -19,10 +19,9 @@ export const FALLBACK_FOOD_IMAGE =
       '</svg>',
   );
 
-/** AWS S3 asset host configuration matching backend */
+/** Image CDN / S3 asset host configuration */
 export const S3_ASSETS_BASE_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_S3_BASE_URL) ||
-  'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com';
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_S3_BASE_URL) || '';
 
 /** Accepted image mime types enforced by restaurant-service */
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
@@ -58,9 +57,9 @@ export function resolveImageUrl(
   const baseUrl = S3_ASSETS_BASE_URL.replace(/\/+$/, '');
   const normalizedKey = clean.replace(/^\/+/, '');
 
-  // AWS S3 object key (e.g. "restaurants/1/uuid.jpg" or "/restaurants/1/uuid.jpg")
+  // AWS S3 / CDN object key (e.g. "restaurants/1/uuid.jpg" or "/restaurants/1/uuid.jpg")
   if (normalizedKey.startsWith('restaurants/')) {
-    return `${baseUrl}/${normalizedKey}`;
+    return baseUrl ? `${baseUrl}/${normalizedKey}` : `/${normalizedKey}`;
   }
 
   // Relative public asset path starting with slash (e.g. "/favicon.svg")
@@ -68,8 +67,8 @@ export function resolveImageUrl(
     return clean;
   }
 
-  // Fallback as S3 key
-  return `${baseUrl}/${normalizedKey}`;
+  // Fallback as S3 / CDN key
+  return baseUrl ? `${baseUrl}/${normalizedKey}` : `/${normalizedKey}`;
 }
 
 /**

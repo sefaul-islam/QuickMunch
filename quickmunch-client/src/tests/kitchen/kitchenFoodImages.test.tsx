@@ -15,23 +15,17 @@ import type { FoodItemResponse } from '../../api/types/restaurant';
 
 describe('S3 Image Resolution & Kitchen Food Item Images', () => {
   describe('1. S3 Image Resolution Utility', () => {
-    it('resolves standard S3 object keys to full S3 asset URLs', () => {
+    it('resolves standard S3 object keys to asset path/URL without hardcoded bucket', () => {
       const resolved = resolveImageUrl('restaurants/4/food/food-image.jpg');
-      expect(resolved).toBe(
-        'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com/restaurants/4/food/food-image.jpg',
-      );
+      expect(resolved).toBe('/restaurants/4/food/food-image.jpg');
     });
 
     it('safely handles leading slashes in S3 object keys', () => {
       const resolved = resolveImageUrl('/restaurants/4/food/food-image.jpg');
-      expect(resolved).toBe(
-        'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com/restaurants/4/food/food-image.jpg',
-      );
+      expect(resolved).toBe('/restaurants/4/food/food-image.jpg');
 
       const resolvedMultiple = resolveImageUrl('///restaurants/101/pasta.jpg');
-      expect(resolvedMultiple).toBe(
-        'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com/restaurants/101/pasta.jpg',
-      );
+      expect(resolvedMultiple).toBe('/restaurants/101/pasta.jpg');
     });
 
     it('preserves absolute web URLs, data URIs, and blob URIs without prefixing', () => {
@@ -101,14 +95,10 @@ describe('S3 Image Resolution & Kitchen Food Item Images', () => {
 
       // Verify customer-facing dish images resolve to S3 URLs
       const figPizzaImg = screen.getByRole('img', { name: 'Charred Fig & Stracciatella Pizza' });
-      expect(figPizzaImg.getAttribute('src')).toBe(
-        'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com/restaurants/1/food/sh-1.jpg',
-      );
+      expect(figPizzaImg.getAttribute('src')).toBe('/restaurants/1/food/sh-1.jpg');
 
       const chanterelleImg = screen.getByRole('img', { name: 'Wild Chanterelle & Taleggio Pizza' });
-      expect(chanterelleImg.getAttribute('src')).toBe(
-        'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com/restaurants/1/food/sh-4.jpg',
-      );
+      expect(chanterelleImg.getAttribute('src')).toBe('/restaurants/1/food/sh-4.jpg');
     });
 
     it('swaps broken customer dish image to neutral QuickMunch fallback on error', () => {
@@ -159,9 +149,7 @@ describe('S3 Image Resolution & Kitchen Food Item Images', () => {
       );
 
       const foodImg = screen.getByRole('img', { name: 'Smoked Wagyu Birria Tacos' });
-      expect(foodImg.getAttribute('src')).toBe(
-        'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com/restaurants/4/food/birria.jpg',
-      );
+      expect(foodImg.getAttribute('src')).toBe('/restaurants/4/food/birria.jpg');
     });
 
     it('displays neutral QuickMunch-themed fallback when food imageUrl is null or empty', () => {

@@ -282,12 +282,12 @@ describe('Restaurant Owner Dashboard', () => {
       expect(validateImageFile(oversizedFile).error).toContain('File is too large');
     });
 
-    it('resolves S3 object keys to full S3 URLs and preserves web URLs', () => {
+    it('resolves S3 object keys to URLs and preserves web URLs', () => {
       expect(resolveImageUrl('https://example.com/photo.jpg')).toBe(
         'https://example.com/photo.jpg',
       );
       expect(resolveImageUrl('restaurants/101/banner.jpg')).toBe(
-        'https://quickmunch-assets-prod.s3.ap-south-1.amazonaws.com/restaurants/101/banner.jpg',
+        '/restaurants/101/banner.jpg',
       );
       expect(resolveImageUrl(null)).toContain('unsplash');
     });
