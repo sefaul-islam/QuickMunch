@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public record OrderEvent(
         String orderNumber,
-        Long userId,
+        String userId,
         Long restaurantId,
         String email,
         OrderStatus status,

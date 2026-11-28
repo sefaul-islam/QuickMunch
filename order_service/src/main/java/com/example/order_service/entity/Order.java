@@ -37,7 +37,7 @@ public class Order {
     private String orderNumber;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column(name = "restaurant_id", nullable = false)
     private Long restaurantId;

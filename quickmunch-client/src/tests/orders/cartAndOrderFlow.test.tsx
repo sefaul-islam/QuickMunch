@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthContext, type AuthContextValue } from '../../auth/AuthContext';
 import { CartProvider, useCart } from '../../context/CartContext';
 import { AppLayout } from '../../components/layout/AppLayout';
+import { CustomerDashboardPage } from '../../pages/CustomerDashboardPage';
 import { ordersApi } from '../../api/orders';
 import { restaurantsApi } from '../../api/restaurants';
 import { ApiError } from '../../api/apiError';
@@ -19,6 +20,7 @@ vi.mock('../../api/orders', () => ({
     removeCartItem: vi.fn(),
     clearCart: vi.fn(),
     createOrder: vi.fn(),
+    getMyOrders: vi.fn(),
     getOrder: vi.fn(),
   },
 }));
@@ -397,5 +399,63 @@ describe('Cart Persistence & Order Checkout Flow', () => {
 
     const alertBanner = await screen.findByRole('alert');
     expect(alertBanner.textContent).toMatch(/Cart already contains items from restaurant 10/i);
+  });
+
+  it('fetches and displays orders and live status from backend in CustomerDashboardPage', async () => {
+    const backendOrder: OrderConfirmationResponse = {
+      id: 701,
+      orderNumber: 'QM-LIVE999',
+      userId: 'kc-cust-1',
+      restaurantId: 10,
+      status: 'PREPARING',
+      paymentStatus: 'PENDING',
+      subtotal: 25,
+      deliveryFee: 2.99,
+      totalAmount: 27.99,
+      deliveryAddressId: 77,
+      items: [
+        { id: 1, foodItemId: 101, quantity: 2, unitPrice: 12.5, subtotal: 25 },
+      ],
+      createdAt: '2026-11-28T10:00:00Z',
+    };
+
+    vi.mocked(ordersApi.getMyOrders).mockResolvedValue([backendOrder]);
+    vi.mocked(ordersApi.getOrder).mockResolvedValue({
+      ...backendOrder,
+      status: 'OUT_FOR_DELIVERY',
+    });
+
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <AuthContext.Provider
+          value={createMockAuth({
+            isAuthenticated: true,
+            user: {
+              id: 'kc-cust-1',
+              firstName: 'Sefaul',
+              lastName: 'Islam',
+              email: 'sefaul@example.com',
+            },
+          })}
+        >
+          <MemoryRouter initialEntries={['/customer/dashboard']}>
+            <CustomerDashboardPage />
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText('#QM-LIVE999')).toBeDefined();
+    expect(screen.getByText('Preparing')).toBeDefined();
+    expect(screen.getByText('$27.99')).toBeDefined();
+
+    // Expand order to fetch live detail status via GET /api/orders/{orderId}
+    fireEvent.click(screen.getByRole('button', { name: /#QM-LIVE999/i }));
+
+    await waitFor(() => {
+      expect(ordersApi.getOrder).toHaveBeenCalledWith(701);
+    });
+    expect(await screen.findByText('Out for Delivery')).toBeDefined();
+    expect(screen.getByText('Dish #101 × 2')).toBeDefined();
   });
 });

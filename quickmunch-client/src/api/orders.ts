@@ -49,6 +49,11 @@ export const ordersApi = {
     return response.data;
   },
 
+  getMyOrders: async (): Promise<OrderConfirmationResponse[]> => {
+    const response = await apiClient.get<OrderConfirmationResponse[]>(API_ENDPOINTS.ORDERS.MY);
+    return response.data;
+  },
+
   getOrder: async (orderId: number | string): Promise<OrderConfirmationResponse> => {
     const response = await apiClient.get<OrderConfirmationResponse>(
       API_ENDPOINTS.ORDERS.BY_ID(orderId),

@@ -9,7 +9,7 @@ import java.util.List;
 public record OrderConfirmationResponse(
         Long id,
         String orderNumber,
-        Long userId,
+        String userId,
         Long restaurantId,
         OrderStatus status,
         PaymentStatus paymentStatus,

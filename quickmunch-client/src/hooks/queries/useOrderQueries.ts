@@ -5,6 +5,18 @@ import { queryKeys } from './queryKeys';
 import { useAuth } from '../useAuth';
 import type { CreateOrderRequest, OrderConfirmationResponse } from '../../api/types/order';
 
+export function useMyOrdersQuery() {
+  const { isAuthenticated, user } = useAuth();
+
+  return useQuery<OrderConfirmationResponse[], ApiError>({
+    queryKey: queryKeys.orders.list({ scope: 'my', userId: String(user?.id ?? 'current') }),
+    queryFn: () => ordersApi.getMyOrders(),
+    enabled: isAuthenticated,
+    staleTime: 15000,
+    refetchOnMount: 'always',
+  });
+}
+
 export function useCreateOrderMutation() {
   const queryClient = useQueryClient();
 

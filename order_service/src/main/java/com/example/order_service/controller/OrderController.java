@@ -2,13 +2,11 @@ package com.example.order_service.controller;
 
 import com.example.order_service.dto.CreateOrderDTO;
 import com.example.order_service.dto.OrderConfirmationResponse;
-import com.example.order_service.dto.OrderStatusUpdateDTO;
 import com.example.order_service.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -45,20 +43,19 @@ public class OrderController {
 //                .body(orderService.createOrder(userId,email, dto));
 //    }
 //
-//    @GetMapping("/{orderId}")
-//    public ResponseEntity<OrderConfirmationResponse> getOrder(
-//            @PathVariable Long orderId,
-//            Authentication authentication) {
-//        Long userId = (Long) authentication.getPrincipal();
-//        return ResponseEntity.ok(orderService.getOrder(orderId, userId));
-//    }
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderConfirmationResponse> getOrder(
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String keycloakId = jwt.getSubject();
+        return ResponseEntity.ok(orderService.getOrder(orderId, keycloakId));
+    }
 //
-//    @GetMapping
-//    public ResponseEntity<List<OrderConfirmationResponse>> getOrdersByUser(
-//            Authentication authentication) {
-//        Long userId = (Long) authentication.getPrincipal();
-//        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
-//    }
+    @GetMapping({ "", "/my" })
+    public ResponseEntity<List<OrderConfirmationResponse>> getOrdersByUser(
+            @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(orderService.getOrdersByUser(jwt.getSubject()));
+    }
 //
 //    @GetMapping("/restaurant/{restaurantId}")
 //    public ResponseEntity<List<OrderConfirmationResponse>> getOrdersByRestaurant(

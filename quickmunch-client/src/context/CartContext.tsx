@@ -37,7 +37,6 @@ export interface CartContextValue {
   cartError: string | null;
   clearCartError: () => void;
   markOrderCompleted: (order: OrderConfirmationResponse) => void;
-  recentOrders: OrderConfirmationResponse[];
   totalCartCount: number;
   cartSubtotal: number;
   currentAddress: DeliveryAddress | null;
@@ -106,7 +105,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [isCartSyncing, setIsCartSyncing] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
-  const [recentOrders, setRecentOrders] = useState<OrderConfirmationResponse[]>([]);
 
   const restaurantNamesRef = useRef<Record<string, string>>({});
   const wasAuthenticatedRef = useRef<boolean>(false);
@@ -211,7 +209,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (wasAuthenticatedRef.current) {
         wasAuthenticatedRef.current = false;
         setCartItems(readGuestCartFromStorage());
-        setRecentOrders([]);
         setCartError(null);
       }
       return;
@@ -451,7 +448,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCartItems([]);
       clearGuestCartStorage();
       setCartError(null);
-      setRecentOrders((prev) => [order, ...prev]);
       showToast(`Order ${order.orderNumber} placed!`);
     },
     [showToast],
@@ -485,7 +481,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       cartError,
       clearCartError,
       markOrderCompleted,
-      recentOrders,
       totalCartCount,
       cartSubtotal,
       currentAddress,
@@ -511,7 +506,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       cartError,
       clearCartError,
       markOrderCompleted,
-      recentOrders,
       totalCartCount,
       cartSubtotal,
       currentAddress,

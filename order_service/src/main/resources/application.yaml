@@ -29,7 +29,7 @@ spring:
           keycloak-client:
             provider: keycloak
             client-id: ${KEYCLOAK_CLIENT_ID:order-service}
-            client-secret: ${KEYCLOAK_CLIENT_SECRET:order-service-secret}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:fsFO9mTnSYyi1fyArW1ShLJPHfCU9ZgAFxMM9ubK9dmpDmtzeVV0bHHjROz7vU2zv5KkAIbdTJTZDoW41mdxuS}
             authorization-grant-type: client_credentials
             client-authentication-method: client_secret_basic
         provider:

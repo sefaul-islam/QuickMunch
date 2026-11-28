@@ -36,7 +36,7 @@ public class Cart {
     private Long id;
 
     @Column(name = "user_id", nullable = false, unique = true)
-    private Long userId;
+    private String userId;
 
     @Column(name = "restaurant_id", nullable = false)
     private Long restaurantId;
