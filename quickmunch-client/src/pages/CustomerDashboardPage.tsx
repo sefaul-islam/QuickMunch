@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, MapPin, Clock, Repeat, Sparkles } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { CartContext } from '../context/CartContext';
 
 export const CustomerDashboardPage: React.FC = () => {
   const { user, appRoles } = useAuth();
+  const cartContext = useContext(CartContext);
+  const recentOrders = cartContext?.recentOrders ?? [];
   const navigate = useNavigate();
 
   const displayName = user
@@ -75,7 +78,7 @@ export const CustomerDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Recent Orders Overview Placeholder */}
+          {/* Recent Orders Overview */}
           <div className="bg-white rounded-2xl border border-cream-border p-6 shadow-warm-sm space-y-4">
             <div className="flex items-center justify-between border-b border-cream-border/60 pb-3">
               <h3 className="font-serif text-lg font-bold text-charcoal flex items-center gap-2">
@@ -85,13 +88,41 @@ export const CustomerDashboardPage: React.FC = () => {
               <span className="text-[11px] text-charcoal-muted">Order Tracking</span>
             </div>
 
-            <div className="p-8 text-center bg-cream-surface/50 rounded-xl border border-dashed border-cream-border space-y-2">
-              <ShoppingBag size={24} className="mx-auto text-charcoal-faint" />
-              <p className="text-xs font-semibold text-charcoal">No active orders placed</p>
-              <p className="text-[11px] text-charcoal-muted max-w-sm mx-auto">
-                When you place dining orders from our artisan kitchens, your live dispatch and delivery tracking will appear here.
-              </p>
-            </div>
+            {recentOrders.length === 0 ? (
+              <div className="p-8 text-center bg-cream-surface/50 rounded-xl border border-dashed border-cream-border space-y-2">
+                <ShoppingBag size={24} className="mx-auto text-charcoal-faint" />
+                <p className="text-xs font-semibold text-charcoal">No active orders placed</p>
+                <p className="text-[11px] text-charcoal-muted max-w-sm mx-auto">
+                  When you place dining orders from our artisan kitchens, your live dispatch and delivery tracking will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="p-4 rounded-xl bg-cream-surface/60 border border-cream-border flex items-center justify-between gap-4"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-charcoal">
+                          #{order.orderNumber}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-primary-surface text-primary text-[10px] font-bold">
+                          {order.status}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-charcoal-muted">
+                        {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold text-primary tabular-nums">
+                      ${Number(order.totalAmount).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

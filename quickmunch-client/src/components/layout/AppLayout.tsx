@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Navbar } from './Navbar';
@@ -7,14 +7,17 @@ import { MobileNav } from './MobileNav';
 import { Footer } from './Footer';
 import { CartDrawer } from '../food/CartDrawer';
 import { LocationModal } from '../food/LocationModal';
+import { LoginPromptModal } from '../food/LoginPromptModal';
+import { CheckoutModal } from '../food/CheckoutModal';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../hooks/useAuth';
 import type { DeliveryAddress } from '../../types';
 
 export const AppLayout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { isAuthenticated, user, login } = useAuth();
 
   const savedAddresses = useMemo<DeliveryAddress[]>(() => {
     if (!user?.addresses?.length) return [];
@@ -28,8 +31,18 @@ export const AppLayout: React.FC = () => {
 
   const {
     cartItems,
+    cartSubtotal,
     isCartOpen,
     setIsCartOpen,
+    isLoginPromptOpen,
+    setIsLoginPromptOpen,
+    isCheckoutOpen,
+    setIsCheckoutOpen,
+    isCartLoading,
+    isCartSyncing,
+    cartError,
+    clearCartError,
+    markOrderCompleted,
     updateQuantity,
     removeItem,
     clearCart,
@@ -38,8 +51,12 @@ export const AppLayout: React.FC = () => {
     isLocationModalOpen,
     setIsLocationModalOpen,
     toastMessage,
-    showToast,
   } = useCart();
+
+  const totalCartCount = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
+    [cartItems],
+  );
 
   // Scroll to top on route change
   useEffect(() => {
@@ -47,9 +64,17 @@ export const AppLayout: React.FC = () => {
   }, [location.pathname]);
 
   const handleCheckout = () => {
-    showToast('Order confirmed for single-courier dispatch (Mock)');
-    clearCart();
     setIsCartOpen(false);
+    if (!isAuthenticated) {
+      setIsLoginPromptOpen(true);
+      return;
+    }
+    setIsCheckoutOpen(true);
+  };
+
+  const handlePromptLogin = () => {
+    setIsLoginPromptOpen(false);
+    void login({ redirectUri: window.location.href });
   };
 
   const isOwnerDashboard = location.pathname.startsWith('/owner/dashboard');
@@ -95,6 +120,32 @@ export const AppLayout: React.FC = () => {
         onRemoveItem={removeItem}
         onClearCart={clearCart}
         onCheckout={handleCheckout}
+        isLoading={isCartLoading}
+        isSyncing={isCartSyncing}
+        error={cartError}
+        onDismissError={clearCartError}
+        isAuthenticated={isAuthenticated}
+      />
+
+      {/* Login Required Prompt for Unauthenticated Checkout */}
+      <LoginPromptModal
+        isOpen={isLoginPromptOpen}
+        onClose={() => setIsLoginPromptOpen(false)}
+        onLogin={handlePromptLogin}
+        itemCount={totalCartCount}
+        subtotal={cartSubtotal}
+      />
+
+      {/* Order Checkout Dialog */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        items={cartItems}
+        subtotal={cartSubtotal}
+        user={user}
+        currentAddress={currentAddress}
+        onOrderSuccess={markOrderCompleted}
+        onViewOrders={() => navigate('/customer/dashboard')}
       />
 
       {/* Delivery Address Selector Modal */}

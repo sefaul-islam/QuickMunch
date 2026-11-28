@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { CartItem } from '../../types';
 import { Button } from '../ui/Button';
@@ -14,7 +14,14 @@ export interface CartDrawerProps {
   onRemoveItem: (dishId: string) => void;
   onClearCart: () => void;
   onCheckout?: () => void;
+  isLoading?: boolean;
+  isSyncing?: boolean;
+  error?: string | null;
+  onDismissError?: () => void;
+  isAuthenticated?: boolean;
 }
+
+const DELIVERY_FEE = 2.99;
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
   isOpen,
@@ -24,6 +31,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemoveItem,
   onClearCart,
   onCheckout,
+  isLoading = false,
+  isSyncing = false,
+  error = null,
+  onDismissError,
+  isAuthenticated = true,
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -34,11 +46,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   });
 
   const subtotal = items.reduce((acc, item) => acc + item.dish.price * item.quantity, 0);
-  const freeDeliveryThreshold = 45.0;
-  const deliveryFee = subtotal >= freeDeliveryThreshold ? 0 : 2.99;
-  const packagingFee = items.length > 0 ? 1.50 : 0;
-  const total = subtotal + deliveryFee + packagingFee;
-  const progressToFreeDelivery = Math.min(100, (subtotal / freeDeliveryThreshold) * 100);
+  const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
+  const total = subtotal + deliveryFee;
 
   return (
     <AnimatePresence>
@@ -82,7 +91,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       Your Order Bag
                     </h2>
                     <span className="text-[11px] text-charcoal-muted block">
-                      Direct single-kitchen transit
+                      {isSyncing ? 'Saving changes...' : 'Direct single-kitchen transit'}
                     </span>
                   </div>
                   {items.length > 0 && (
@@ -97,7 +106,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     <button
                       type="button"
                       onClick={onClearCart}
-                      className="text-xs text-charcoal-muted hover:text-red-700 font-semibold px-2 py-1 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      disabled={isSyncing}
+                      className="text-xs text-charcoal-muted hover:text-red-700 font-semibold px-2 py-1 rounded transition-colors cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       Clear
                     </button>
@@ -113,29 +123,44 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
               </div>
 
-              {/* Free Delivery Threshold Meter */}
-              <div className="p-4 bg-sage/40 border-b border-sage-dark/30">
-                <div className="flex justify-between text-xs font-semibold text-primary mb-1.5">
-                  <span>
-                    {subtotal >= freeDeliveryThreshold
-                      ? 'Complimentary Courier Pass Unlocked!'
-                      : `Add $${(freeDeliveryThreshold - subtotal).toFixed(2)} for Free Courier Dispatch`}
-                  </span>
-                  <span className="tabular-nums">{Math.round(progressToFreeDelivery)}%</span>
+              {/* Error banner */}
+              {error && (
+                <div
+                  role="alert"
+                  className="mx-4 mt-3 p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-start justify-between gap-2 text-xs text-rose-700"
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                  {onDismissError && (
+                    <button
+                      type="button"
+                      onClick={onDismissError}
+                      className="text-rose-700 hover:text-rose-900 font-semibold cursor-pointer"
+                      aria-label="Dismiss cart error"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
-                <div className="w-full bg-white/70 h-2 rounded-full overflow-hidden border border-sage-dark/20">
-                  <motion.div
-                    className="h-full bg-primary rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressToFreeDelivery}%` }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                  />
-                </div>
-              </div>
+              )}
 
               {/* Items List */}
               <div className="flex-1 overflow-y-auto p-5 divide-y divide-cream-border/60">
-                {items.length === 0 ? (
+                {isLoading ? (
+                  <div className="space-y-4 animate-pulse">
+                    {[1, 2].map((idx) => (
+                      <div key={idx} className="flex items-center gap-3.5 py-2">
+                        <div className="w-16 h-16 rounded-lg bg-cream-border/40 shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-cream-border/40 rounded w-2/3" />
+                          <div className="h-3 bg-cream-border/30 rounded w-1/3" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : items.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
                     <div className="w-16 h-16 rounded-full bg-cream-dark/60 flex items-center justify-center text-charcoal-muted">
                       <ShoppingBag size={28} />
@@ -184,8 +209,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           <motion.button
                             whileTap={{ scale: 0.85 }}
                             type="button"
+                            disabled={isSyncing}
                             onClick={() => onUpdateQuantity(item.dish.id, -1)}
-                            className="p-2.5 text-charcoal hover:text-primary transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
+                            className="p-2.5 text-charcoal hover:text-primary transition-colors cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
                             aria-label={`Decrease quantity of ${item.dish.name}`}
                           >
                             {item.quantity === 1 ? (
@@ -200,8 +226,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           <motion.button
                             whileTap={{ scale: 0.85 }}
                             type="button"
+                            disabled={isSyncing}
                             onClick={() => onUpdateQuantity(item.dish.id, 1)}
-                            className="p-2.5 text-charcoal hover:text-primary transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
+                            className="p-2.5 text-charcoal hover:text-primary transition-colors cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
                             aria-label={`Increase quantity of ${item.dish.name}`}
                           >
                             <Plus size={13} />
@@ -210,8 +237,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                         <button
                           type="button"
+                          disabled={isSyncing}
                           onClick={() => onRemoveItem(item.dish.id)}
-                          className="p-1.5 text-charcoal-muted hover:text-red-700 transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                          className="p-1.5 text-charcoal-muted hover:text-red-700 transition-colors cursor-pointer disabled:opacity-50 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                           aria-label={`Remove ${item.dish.name} from bag`}
                           title="Remove item"
                         >
@@ -236,17 +264,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     <div className="flex justify-between">
                       <span>Dedicated Courier Transit</span>
                       <span className="text-charcoal font-semibold tabular-nums">
-                        {deliveryFee === 0 ? (
-                          <strong className="text-primary font-bold">FREE</strong>
-                        ) : (
-                          `$${deliveryFee.toFixed(2)}`
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Sustainable Sugarcane Fiber Packaging</span>
-                      <span className="text-charcoal font-semibold tabular-nums">
-                        ${packagingFee.toFixed(2)}
+                        ${deliveryFee.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t border-cream-border text-sm font-bold text-charcoal">
@@ -257,10 +275,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
                   </div>
 
+                  {!isAuthenticated && (
+                    <p className="text-[11px] text-charcoal-muted text-center">
+                      You will be asked to sign in to place your order.
+                    </p>
+                  )}
+
                   <Button
                     variant="primary"
                     size="lg"
                     fullWidth
+                    disabled={isSyncing}
                     rightIcon={<ArrowRight size={16} />}
                     onClick={onCheckout}
                   >

@@ -37,5 +37,11 @@ export const API_ENDPOINTS = {
     MY: '/api/orders/my',
     CANCEL: (id: string | number) => `/api/orders/${encodeURIComponent(String(id))}/cancel`,
     STATUS: (id: string | number) => `/api/orders/${encodeURIComponent(String(id))}/status`,
+    CART: {
+      BASE: '/api/orders/cart',
+      ITEMS: '/api/orders/cart/items',
+      ITEM_BY_ID: (foodItemId: string | number) =>
+        `/api/orders/cart/items/${encodeURIComponent(String(foodItemId))}`,
+    },
   },
 } as const;
