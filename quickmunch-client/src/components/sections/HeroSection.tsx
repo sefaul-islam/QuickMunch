@@ -1,26 +1,22 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
-import type { Restaurant } from '../../types';
+import { HERO_SHOWCASE_ITEM } from '../../data/heroShowcaseData';
 import { Button } from '../ui/Button';
 import { useImageFade } from '../../hooks/useImageFade';
 import { onFoodImgError } from '../../lib/imageUtils';
 
 export interface HeroSectionProps {
   onExploreClick: () => void;
-  featuredRestaurant?: Restaurant;
-  onSelectDetailKitchen?: () => void;
-  // Kept optional for backward compatibility
-  currentAddress?: unknown;
-  onOpenLocationModal?: () => void;
-  onQuickAdd?: unknown;
+  onShowcaseClick?: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   onExploreClick,
-  onSelectDetailKitchen,
+  onShowcaseClick,
 }) => {
   const heroFade = useImageFade('duration-700');
+  const handleShowcaseAction = onShowcaseClick ?? onExploreClick;
 
   return (
     <section className="relative w-full pt-8 pb-12 sm:pt-12 sm:pb-16 lg:pt-16 lg:pb-20">
@@ -68,19 +64,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div
               tabIndex={0}
               role="button"
-              aria-label="View featured artisan kitchen menu: Osteria Dell'Alba"
-              onClick={onSelectDetailKitchen}
+              aria-label={HERO_SHOWCASE_ITEM.ariaLabel}
+              onClick={handleShowcaseAction}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  onSelectDetailKitchen?.();
+                  handleShowcaseAction();
                 }
               }}
               className="group relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-2xl overflow-hidden bg-cream-dark border border-cream-border shadow-warm hover:shadow-editorial transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <img
-                src="https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=1400&auto=format&fit=crop&q=80"
-                alt="Hand-rolled tagliolini al tartufo from Osteria Dell'Alba"
+                src={HERO_SHOWCASE_ITEM.imageUrl}
+                alt={HERO_SHOWCASE_ITEM.imageAlt}
                 className={`w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103 ${heroFade.imgClassName}`}
                 onLoad={heroFade.onLoad}
                 onError={onFoodImgError}
@@ -91,17 +87,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between text-cream">
                 <div>
                   <span className="text-[11px] font-semibold tracking-wider uppercase text-terracotta block mb-0.5">
-                    Chef Featured
+                    {HERO_SHOWCASE_ITEM.eyebrow}
                   </span>
                   <h2 className="font-serif text-lg sm:text-xl font-bold text-cream drop-shadow-xs">
-                    Hand-Rolled 30-Yolk Tagliolini al Tartufo
+                    {HERO_SHOWCASE_ITEM.title}
                   </h2>
                   <p className="text-xs text-cream/80 mt-0.5">
-                    Osteria Dell'Alba • 30–40 min
+                    {HERO_SHOWCASE_ITEM.subtitle}
                   </p>
                 </div>
                 <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold bg-white/90 text-charcoal px-3 py-1.5 rounded-full shadow-warm-sm group-hover:bg-white transition-colors">
-                  View Menu <ArrowRight size={13} className="text-primary" />
+                  {HERO_SHOWCASE_ITEM.ctaLabel} <ArrowRight size={13} className="text-primary" />
                 </span>
               </div>
             </div>

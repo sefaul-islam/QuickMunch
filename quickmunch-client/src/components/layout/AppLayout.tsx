@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -8,11 +8,23 @@ import { Footer } from './Footer';
 import { CartDrawer } from '../food/CartDrawer';
 import { LocationModal } from '../food/LocationModal';
 import { useCart } from '../../context/CartContext';
-import { DELIVERY_ADDRESSES } from '../../data/mockData';
+import { useAuth } from '../../hooks/useAuth';
+import type { DeliveryAddress } from '../../types';
 
 export const AppLayout: React.FC = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
+
+  const savedAddresses = useMemo<DeliveryAddress[]>(() => {
+    if (!user?.addresses?.length) return [];
+    return user.addresses.map((addr) => ({
+      id: String(addr.id),
+      label: addr.label || 'Saved Address',
+      street: addr.street,
+      neighborhood: [addr.city, addr.state].filter(Boolean).join(', ') || addr.street,
+    }));
+  }, [user]);
 
   const {
     cartItems,
@@ -89,7 +101,7 @@ export const AppLayout: React.FC = () => {
       <LocationModal
         isOpen={isLocationModalOpen}
         onClose={() => setIsLocationModalOpen(false)}
-        addresses={DELIVERY_ADDRESSES}
+        addresses={savedAddresses}
         currentAddress={currentAddress}
         onSelectAddress={setCurrentAddress}
       />

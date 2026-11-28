@@ -8,7 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { APP_ROLES } from '../../auth/jwt';
 
 export interface NavbarProps {
-  currentAddress?: DeliveryAddress;
+  currentAddress?: DeliveryAddress | null;
   onOpenLocationModal?: () => void;
   cartItems?: CartItem[];
   onOpenCart?: () => void;
@@ -141,7 +141,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={onOpenLocationModal}
             className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/80 hover:bg-white border border-cream-border transition-all duration-150 cursor-pointer text-left text-xs shadow-warm-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label={`Delivery location: ${currentAddress.neighborhood}. Click to change address.`}
+            aria-label={
+              currentAddress
+                ? `Delivery location: ${currentAddress.neighborhood}. Click to change address.`
+                : 'Set delivery location'
+            }
           >
             <div className="w-5 h-5 rounded-full bg-primary-surface text-primary flex items-center justify-center">
               <MapPin size={12} />
@@ -151,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Deliver to
               </span>
               <span className="font-semibold text-charcoal flex items-center gap-1 leading-tight">
-                {currentAddress.neighborhood}
+                {currentAddress ? currentAddress.neighborhood : 'Set location'}
                 <ChevronDown size={12} className="text-charcoal-muted" />
               </span>
             </div>

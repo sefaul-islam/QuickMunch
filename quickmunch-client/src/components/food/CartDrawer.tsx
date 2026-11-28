@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { CartItem } from '../../types';
 import { Button } from '../ui/Button';
 import { useDialogFocus } from '../../hooks/useDialogFocus';
-import { onFoodImgError } from '../../lib/imageUtils';
+import { onFoodImgError, resolveFoodImageUrl } from '../../lib/imageUtils';
 
 export interface CartDrawerProps {
   isOpen: boolean;
@@ -161,7 +161,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         className="py-4 first:pt-0 last:pb-0 flex items-center gap-3.5"
                       >
                         <img
-                          src={item.dish.image}
+                          src={resolveFoodImageUrl(item.dish.image)}
                           alt={item.dish.name}
                           className="w-16 h-16 rounded-lg object-cover bg-cream-dark shrink-0 border border-cream-border"
                           onError={onFoodImgError}

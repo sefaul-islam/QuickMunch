@@ -1,8 +1,18 @@
 import React from 'react';
 
-/** Generic restaurant/kitchen fallback — a warm restaurant interior shot */
+/** Local QuickMunch-themed restaurant kitchen fallback data URI */
 export const FALLBACK_RESTAURANT_IMAGE =
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80';
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">' +
+      '<rect width="800" height="500" fill="#FAF7F2"/>' +
+      '<rect x="4" y="4" width="792" height="492" rx="24" fill="#FAF7F2" stroke="#E8E1D3" stroke-width="3"/>' +
+      '<circle cx="400" cy="215" r="72" fill="#E8EFEA"/>' +
+      '<path d="M356 248v-42l44-32 44 32v42h-88z" fill="#173D32"/>' +
+      '<rect x="386" y="218" width="28" height="30" rx="4" fill="#D98245"/>' +
+      '<text x="400" y="330" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif" font-size="20" font-weight="600" fill="#626661" letter-spacing="0.5">QuickMunch Kitchen</text>' +
+      '</svg>',
+  );
 
 /** Neutral QuickMunch-themed food/dish fallback data URI */
 export const FALLBACK_FOOD_IMAGE =
@@ -38,11 +48,18 @@ export function resolveImageUrl(
   imageUrl?: string | null,
   fallback = FALLBACK_RESTAURANT_IMAGE,
 ): string {
-  if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+  if (!imageUrl || typeof imageUrl !== 'string') {
     return fallback;
   }
 
   const clean = imageUrl.trim();
+  if (
+    clean === '' ||
+    clean.toLowerCase() === 'null' ||
+    clean.toLowerCase() === 'undefined'
+  ) {
+    return fallback;
+  }
 
   // Already a full web URL, data URI, or browser object URL
   if (

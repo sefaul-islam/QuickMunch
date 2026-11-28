@@ -9,7 +9,7 @@ import { APP_ROLES } from '../../auth/jwt';
 export interface MobileNavProps {
   isOpen: boolean;
   onClose: () => void;
-  currentAddress?: DeliveryAddress;
+  currentAddress?: DeliveryAddress | null;
   onOpenLocationModal?: () => void;
   onScrollToSection?: (sectionId: string) => void;
 }
@@ -74,7 +74,11 @@ export const MobileNav: React.FC<MobileNavProps> = ({
             onOpenLocationModal();
           }}
           className="w-full flex items-center justify-between p-3.5 bg-cream rounded-xl border border-cream-border cursor-pointer shadow-warm-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          aria-label={`Delivery address: ${currentAddress.street}, ${currentAddress.neighborhood}. Click to change.`}
+          aria-label={
+            currentAddress
+              ? `Delivery address: ${currentAddress.street}, ${currentAddress.neighborhood}. Click to change.`
+              : 'Set delivery address'
+          }
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary-surface text-primary flex items-center justify-center shrink-0">
@@ -85,7 +89,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({
                 Delivering to
               </span>
               <span className="text-sm font-semibold text-charcoal">
-                {currentAddress.street}, {currentAddress.neighborhood}
+                {currentAddress
+                  ? `${currentAddress.street}, ${currentAddress.neighborhood}`
+                  : 'Set delivery address'}
               </span>
             </div>
           </div>

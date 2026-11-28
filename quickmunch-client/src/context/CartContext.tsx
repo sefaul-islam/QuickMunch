@@ -1,11 +1,15 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect, useMemo, useCallback, useContext } from 'react';
-import type { CartItem, Dish, Restaurant, DeliveryAddress } from '../types';
-import { RESTAURANTS, DELIVERY_ADDRESSES } from '../data/mockData';
+import type { CartItem, Dish, DeliveryAddress } from '../types';
+
+export interface CartRestaurantRef {
+  id: string | number;
+  name: string;
+}
 
 export interface CartContextValue {
   cartItems: CartItem[];
-  addToCart: (dish: Dish, restaurant?: Restaurant | { id: string; name: string }) => void;
+  addToCart: (dish: Dish, restaurant: CartRestaurantRef) => void;
   updateQuantity: (dishId: string, delta: number) => void;
   removeItem: (dishId: string) => void;
   clearCart: () => void;
@@ -13,12 +17,12 @@ export interface CartContextValue {
   setIsCartOpen: (open: boolean) => void;
   totalCartCount: number;
   cartSubtotal: number;
-  currentAddress: DeliveryAddress;
-  setCurrentAddress: (address: DeliveryAddress) => void;
+  currentAddress: DeliveryAddress | null;
+  setCurrentAddress: (address: DeliveryAddress | null) => void;
   isLocationModalOpen: boolean;
   setIsLocationModalOpen: (open: boolean) => void;
   favoriteRestaurantIds: string[];
-  toggleFavorite: (restaurantId: string) => void;
+  toggleFavorite: (restaurantId: string | number, restaurantName?: string) => void;
   toastMessage: string | null;
   showToast: (message: string) => void;
 }
@@ -30,46 +34,39 @@ const ADDRESS_STORAGE_KEY = 'quickmunch_address';
 export const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Address & Location state
-  const [currentAddress, setCurrentAddress] = useState<DeliveryAddress>(() => {
+  // Address & Location state (sourced from localStorage or user selection; never fake data)
+  const [currentAddress, setCurrentAddress] = useState<DeliveryAddress | null>(() => {
     try {
       const saved = localStorage.getItem(ADDRESS_STORAGE_KEY);
       if (saved) return JSON.parse(saved);
     } catch {
-      // Fallback
+      // Ignore storage read errors
     }
-    return DELIVERY_ADDRESSES[0];
+    return null;
   });
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
-  // Cart state
+  // Cart state (starts empty unless persisted in localStorage)
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem(CART_STORAGE_KEY);
       if (saved) return JSON.parse(saved);
     } catch {
-      // Fallback
+      // Ignore storage read errors
     }
-    return [
-      {
-        dish: RESTAURANTS[0].dishes[0],
-        restaurantId: RESTAURANTS[0].id,
-        restaurantName: RESTAURANTS[0].name,
-        quantity: 1,
-      },
-    ];
+    return [];
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Favorites state
+  // Favorites state (starts empty unless persisted in localStorage)
   const [favoriteRestaurantIds, setFavoriteRestaurantIds] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
       if (saved) return JSON.parse(saved);
     } catch {
-      // Fallback
+      // Ignore storage read errors
     }
-    return ['sylvan-hearth'];
+    return [];
   });
 
   // Sync to localStorage
@@ -91,7 +88,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     try {
-      localStorage.setItem(ADDRESS_STORAGE_KEY, JSON.stringify(currentAddress));
+      if (currentAddress) {
+        localStorage.setItem(ADDRESS_STORAGE_KEY, JSON.stringify(currentAddress));
+      } else {
+        localStorage.removeItem(ADDRESS_STORAGE_KEY);
+      }
     } catch {
       // Ignore
     }
@@ -107,23 +108,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 2800);
   }, []);
 
-  const toggleFavorite = useCallback((restaurantId: string) => {
-    const restaurant = RESTAURANTS.find((r) => r.id === restaurantId);
-    const name = restaurant?.name || 'Kitchen';
+  const toggleFavorite = useCallback((restaurantId: string | number, restaurantName?: string) => {
+    const idStr = String(restaurantId);
+    const name = restaurantName || 'Kitchen';
     setFavoriteRestaurantIds((prev) => {
-      if (prev.includes(restaurantId)) {
+      if (prev.includes(idStr)) {
         showToast(`Removed ${name} from saved kitchens`);
-        return prev.filter((id) => id !== restaurantId);
-      } else {
-        showToast(`Saved ${name} to favorites`);
-        return [...prev, restaurantId];
+        return prev.filter((id) => id !== idStr);
       }
+      showToast(`Saved ${name} to favorites`);
+      return [...prev, idStr];
     });
   }, [showToast]);
 
-  const addToCart = useCallback((dish: Dish, restaurant?: Restaurant | { id: string; name: string }) => {
-    const restId = restaurant?.id || RESTAURANTS[0].id;
-    const restName = restaurant?.name || RESTAURANTS[0].name;
+  const addToCart = useCallback((dish: Dish, restaurant: CartRestaurantRef) => {
+    const restId = String(restaurant.id);
+    const restName = restaurant.name;
 
     setCartItems((prev) => {
       const existing = prev.find((item) => item.dish.id === dish.id);

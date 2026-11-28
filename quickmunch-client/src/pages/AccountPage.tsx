@@ -145,26 +145,32 @@ export const AccountPage: React.FC = () => {
               <span className="text-[11px] text-primary font-semibold">Active Selection</span>
             </div>
 
-            <div className="p-4 bg-primary-surface/40 rounded-xl border border-primary/10 flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                    {currentAddress.label}
-                  </span>
-                  {currentAddress.isDefault && (
-                    <span className="text-[10px] font-semibold bg-primary text-cream px-2 py-0.5 rounded-full">
-                      Default
+            {currentAddress ? (
+              <div className="p-4 bg-primary-surface/40 rounded-xl border border-primary/10 flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                      {currentAddress.label}
                     </span>
-                  )}
+                    {currentAddress.isDefault && (
+                      <span className="text-[10px] font-semibold bg-primary text-cream px-2 py-0.5 rounded-full">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-charcoal">{currentAddress.street}</p>
+                  <p className="text-xs text-charcoal-muted">{currentAddress.neighborhood}</p>
                 </div>
-                <p className="text-sm font-semibold text-charcoal">{currentAddress.street}</p>
-                <p className="text-xs text-charcoal-muted">{currentAddress.neighborhood}</p>
-              </div>
 
-              <span className="text-xs text-charcoal-muted italic">
-                Managed via header selector
-              </span>
-            </div>
+                <span className="text-xs text-charcoal-muted italic">
+                  Managed via header selector
+                </span>
+              </div>
+            ) : (
+              <div className="p-4 bg-cream-surface/60 rounded-xl border border-dashed border-cream-border text-xs text-charcoal-muted">
+                No delivery address selected yet. Use the location selector in the header to set your delivery address.
+              </div>
+            )}
           </div>
         </div>
 
@@ -206,7 +212,7 @@ export const AccountPage: React.FC = () => {
             </div>
             <h3 className="font-serif text-lg font-bold">Ready to dine?</h3>
             <p className="text-xs text-cream/80 leading-relaxed">
-              Explore 8 partner artisan kitchens preparing small-batch menus for direct dispatch.
+              Explore partner artisan kitchens preparing small-batch menus for direct dispatch.
             </p>
             <div className="pt-2">
               <button

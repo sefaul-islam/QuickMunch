@@ -6,7 +6,13 @@ import { AuthContext, type AuthContextValue } from '../../auth/AuthContext';
 import { OwnerDashboardPage } from '../../pages/OwnerDashboardPage';
 import { ImageUploadModal } from '../../components/food/ImageUploadModal';
 import { restaurantsApi } from '../../api/restaurants';
-import { validateImageFile, resolveImageUrl, formatFileSize } from '../../lib/imageUtils';
+import {
+  validateImageFile,
+  resolveImageUrl,
+  formatFileSize,
+  S3_ASSETS_BASE_URL,
+  FALLBACK_RESTAURANT_IMAGE,
+} from '../../lib/imageUtils';
 import type { RestaurantResponse, FoodItemResponse, CategoryResponse } from '../../api/types/restaurant';
 
 // Mock restaurantsApi
@@ -283,13 +289,15 @@ describe('Restaurant Owner Dashboard', () => {
     });
 
     it('resolves S3 object keys to URLs and preserves web URLs', () => {
+      const base = S3_ASSETS_BASE_URL.replace(/\/+$/, '');
+      const expected = base ? `${base}/restaurants/101/banner.jpg` : '/restaurants/101/banner.jpg';
+
       expect(resolveImageUrl('https://example.com/photo.jpg')).toBe(
         'https://example.com/photo.jpg',
       );
-      expect(resolveImageUrl('restaurants/101/banner.jpg')).toBe(
-        '/restaurants/101/banner.jpg',
-      );
-      expect(resolveImageUrl(null)).toContain('unsplash');
+      expect(resolveImageUrl('restaurants/101/banner.jpg')).toBe(expected);
+      expect(resolveImageUrl(null)).toBe(FALLBACK_RESTAURANT_IMAGE);
+      expect(FALLBACK_RESTAURANT_IMAGE.startsWith('data:image/svg+xml')).toBe(true);
     });
 
     it('formats file sizes accurately', () => {

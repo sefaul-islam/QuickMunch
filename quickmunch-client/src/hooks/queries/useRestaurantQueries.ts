@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import { restaurantsApi } from '../../api/restaurants';
 import { queryKeys } from './queryKeys';
 import { useAuth } from '../useAuth';
@@ -12,6 +12,63 @@ import type {
   CreateFoodItemRequest,
   UpdateFoodItemRequest,
 } from '../../api/types/restaurant';
+
+/**
+ * Hook: Fetches all public restaurants
+ */
+export function useRestaurantsQuery() {
+  return useQuery<RestaurantResponse[], Error>({
+    queryKey: queryKeys.restaurants.lists(),
+    queryFn: () => restaurantsApi.getAllRestaurants(),
+    staleTime: 60000,
+  });
+}
+
+export interface FeaturedDishWithRestaurant {
+  foodItem: FoodItemResponse;
+  restaurant: RestaurantResponse;
+}
+
+/**
+ * Hook: Fetches available dishes across the first few active restaurants for discovery
+ */
+export function useFeaturedDishesQuery(
+  restaurants: RestaurantResponse[],
+  maxRestaurants = 6,
+) {
+  const targetRestaurants = restaurants
+    .filter((r) => r.isActive !== false)
+    .slice(0, maxRestaurants);
+
+  const results = useQueries({
+    queries: targetRestaurants.map((restaurant) => ({
+      queryKey: queryKeys.restaurants.foods(restaurant.id),
+      queryFn: () => restaurantsApi.getFoodItems(restaurant.id),
+      staleTime: 30000,
+    })),
+  });
+
+  const isLoading = results.some((r) => r.isLoading);
+  const isError = results.length > 0 && results.every((r) => r.isError);
+
+  const dishes: FeaturedDishWithRestaurant[] = [];
+  results.forEach((result, index) => {
+    const restaurant = targetRestaurants[index];
+    if (!restaurant || !result.data) return;
+    result.data
+      .filter((item) => item.isAvailable)
+      .slice(0, 2)
+      .forEach((foodItem) => {
+        dishes.push({ foodItem, restaurant });
+      });
+  });
+
+  return {
+    dishes: dishes.slice(0, 6),
+    isLoading,
+    isError,
+  };
+}
 
 /**
  * Hook: Fetches the current authenticated owner's restaurants

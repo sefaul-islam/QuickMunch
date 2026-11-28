@@ -1,25 +1,44 @@
 import React, { useMemo } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Search, X, ChevronRight, SlidersHorizontal, Sparkles, Star, Clock, CircleDollarSign } from 'lucide-react';
-import { RESTAURANTS, CATEGORIES } from '../data/mockData';
+import {
+  Search,
+  X,
+  ChevronRight,
+  SlidersHorizontal,
+  Sparkles,
+  ArrowDownAZ,
+  Power,
+  AlertCircle,
+  RefreshCw,
+} from 'lucide-react';
+import { useRestaurantsQuery } from '../hooks/queries/useRestaurantQueries';
 import { RestaurantCard } from '../components/food/RestaurantCard';
 import { useCart } from '../context/CartContext';
 import { Button } from '../components/ui/Button';
-
-type SortKey = 'curated' | 'rating' | 'prepTime' | 'deliveryFee';
+import type { SortOption } from '../types';
 
 export const RestaurantListingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { favoriteRestaurantIds, toggleFavorite, addToCart } = useCart();
+  const { favoriteRestaurantIds, toggleFavorite } = useCart();
+
+  const {
+    data: restaurants = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useRestaurantsQuery();
 
   const searchQuery = searchParams.get('q') || '';
-  const selectedCategory = searchParams.get('category') || 'all';
-  const sortBy = (searchParams.get('sort') as SortKey) || 'curated';
+  const statusFilter = searchParams.get('status') === 'open' ? 'open' : 'all';
+  const rawSort = searchParams.get('sort');
+  const sortBy: SortOption =
+    rawSort === 'open' || rawSort === 'name' ? rawSort : 'default';
 
   const updateParam = (key: string, value: string | null) => {
     const nextParams = new URLSearchParams(searchParams);
-    if (value && value !== 'all' && value !== 'curated') {
+    if (value && value !== 'all' && value !== 'default') {
       nextParams.set(key, value);
     } else {
       nextParams.delete(key);
@@ -31,11 +50,11 @@ export const RestaurantListingPage: React.FC = () => {
     updateParam('q', val.trim() ? val : null);
   };
 
-  const handleCategorySelect = (catId: string) => {
-    updateParam('category', catId === selectedCategory ? null : catId);
+  const handleStatusSelect = (status: 'all' | 'open') => {
+    updateParam('status', status === 'open' ? 'open' : null);
   };
 
-  const handleSortSelect = (sort: SortKey) => {
+  const handleSortSelect = (sort: SortOption) => {
     updateParam('sort', sort);
   };
 
@@ -43,61 +62,50 @@ export const RestaurantListingPage: React.FC = () => {
     setSearchParams(new URLSearchParams(), { replace: true });
   };
 
-  // Filter and sort logic
-  const filteredRestaurants = useMemo(() => {
-    let list = [...RESTAURANTS];
+  const activeRestaurants = useMemo(
+    () => restaurants.filter((r) => r.isActive !== false),
+    [restaurants],
+  );
 
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      const catObj = CATEGORIES.find((c) => c.id === selectedCategory);
-      if (catObj) {
-        list = list.filter(
-          (r) =>
-            r.cuisine.toLowerCase() === catObj.name.toLowerCase() ||
-            r.cuisine.toLowerCase().includes(selectedCategory) ||
-            r.dietaryTags.some((t) => t.toLowerCase().includes(selectedCategory))
-        );
-      }
+  // Filter and sort logic on real backend restaurants
+  const filteredRestaurants = useMemo(() => {
+    let list = [...activeRestaurants];
+
+    if (statusFilter === 'open') {
+      list = list.filter((r) => r.isOpen);
     }
 
-    // Filter by search query (name, cuisine, neighborhood, tagline, dish names)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       list = list.filter(
         (r) =>
           r.name.toLowerCase().includes(q) ||
-          r.cuisine.toLowerCase().includes(q) ||
-          r.neighborhood.toLowerCase().includes(q) ||
-          r.tagline.toLowerCase().includes(q) ||
-          r.dishes.some(
-            (d) =>
-              d.name.toLowerCase().includes(q) ||
-              d.description.toLowerCase().includes(q)
-          )
+          r.address.toLowerCase().includes(q) ||
+          (r.description && r.description.toLowerCase().includes(q)),
       );
     }
 
-    // Sort
     switch (sortBy) {
-      case 'rating':
-        list.sort((a, b) => b.rating - a.rating);
+      case 'open':
+        list.sort((a, b) => Number(b.isOpen) - Number(a.isOpen));
         break;
-      case 'prepTime':
-        list.sort((a, b) => parseInt(a.prepTime) - parseInt(b.prepTime));
+      case 'name':
+        list.sort((a, b) => a.name.localeCompare(b.name));
         break;
-      case 'deliveryFee':
-        list.sort((a, b) => a.deliveryFee - b.deliveryFee);
-        break;
-      case 'curated':
+      case 'default':
       default:
-        // Keep default curated order
         break;
     }
 
     return list;
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [activeRestaurants, statusFilter, searchQuery, sortBy]);
 
-  const activeCategoryObj = CATEGORIES.find((c) => c.id === selectedCategory);
+  const openCount = useMemo(
+    () => filteredRestaurants.filter((r) => r.isOpen).length,
+    [filteredRestaurants],
+  );
+
+  const hasActiveFilters = statusFilter === 'open' || Boolean(searchQuery);
 
   return (
     <div className="py-6 sm:py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -125,10 +133,14 @@ export const RestaurantListingPage: React.FC = () => {
         </div>
 
         {/* Kitchen count badge */}
-        <div className="shrink-0 flex items-center gap-2 text-xs font-semibold text-charcoal bg-white/80 border border-cream-border px-3.5 py-2 rounded-full shadow-warm-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>{filteredRestaurants.length} {filteredRestaurants.length === 1 ? 'kitchen' : 'kitchens'} open now</span>
-        </div>
+        {!isLoading && !isError && (
+          <div className="shrink-0 flex items-center gap-2 text-xs font-semibold text-charcoal bg-white/80 border border-cream-border px-3.5 py-2 rounded-full shadow-warm-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>
+              {openCount} {openCount === 1 ? 'kitchen' : 'kitchens'} open now
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Search & Filter Controls Toolbar */}
@@ -145,7 +157,7 @@ export const RestaurantListingPage: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search by kitchen, cuisine, or specific dish..."
+              placeholder="Search by kitchen name, address, or description..."
               className="w-full bg-white text-sm text-charcoal placeholder:text-charcoal-faint border border-cream-border focus:border-primary focus:ring-2 focus:ring-primary/10 rounded-xl py-2.5 pl-10 pr-9 outline-none transition-all shadow-warm-sm"
             />
             {searchQuery && (
@@ -169,103 +181,89 @@ export const RestaurantListingPage: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => handleSortSelect('curated')}
+              onClick={() => handleSortSelect('default')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                sortBy === 'curated'
+                sortBy === 'default'
                   ? 'bg-primary text-cream shadow-warm-sm'
                   : 'bg-white text-charcoal hover:bg-cream-surface border border-cream-border'
               }`}
             >
               <Sparkles size={12} />
-              <span>Curated</span>
+              <span>Featured</span>
             </button>
 
             <button
               type="button"
-              onClick={() => handleSortSelect('rating')}
+              onClick={() => handleSortSelect('open')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                sortBy === 'rating'
+                sortBy === 'open'
                   ? 'bg-primary text-cream shadow-warm-sm'
                   : 'bg-white text-charcoal hover:bg-cream-surface border border-cream-border'
               }`}
             >
-              <Star size={12} className={sortBy === 'rating' ? 'fill-cream' : 'text-terracotta fill-terracotta'} />
-              <span>Highest Rated</span>
+              <Power size={12} />
+              <span>Open First</span>
             </button>
 
             <button
               type="button"
-              onClick={() => handleSortSelect('prepTime')}
+              onClick={() => handleSortSelect('name')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                sortBy === 'prepTime'
+                sortBy === 'name'
                   ? 'bg-primary text-cream shadow-warm-sm'
                   : 'bg-white text-charcoal hover:bg-cream-surface border border-cream-border'
               }`}
             >
-              <Clock size={12} />
-              <span>Fastest</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSortSelect('deliveryFee')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                sortBy === 'deliveryFee'
-                  ? 'bg-primary text-cream shadow-warm-sm'
-                  : 'bg-white text-charcoal hover:bg-cream-surface border border-cream-border'
-              }`}
-            >
-              <CircleDollarSign size={12} />
-              <span>Lowest Fee</span>
+              <ArrowDownAZ size={12} />
+              <span>Name A–Z</span>
             </button>
           </div>
         </div>
 
-        {/* Cuisine Filter Pills */}
+        {/* Status Filter Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none pt-1">
           <button
             type="button"
-            onClick={() => handleCategorySelect('all')}
+            onClick={() => handleStatusSelect('all')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-              selectedCategory === 'all'
+              statusFilter === 'all'
                 ? 'bg-charcoal text-cream shadow-warm-sm'
                 : 'bg-white text-charcoal hover:bg-cream-surface border border-cream-border'
             }`}
           >
-            All Cuisines
+            All Kitchens
           </button>
 
-          {CATEGORIES.filter((c) => c.id !== 'all').map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => handleCategorySelect(cat.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                  isSelected
-                    ? 'bg-primary text-cream shadow-warm-sm'
-                    : 'bg-white text-charcoal hover:bg-cream-surface border border-cream-border'
-                }`}
-              >
-                <span>{cat.name}</span>
-              </button>
-            );
-          })}
+          <button
+            type="button"
+            onClick={() => handleStatusSelect(statusFilter === 'open' ? 'all' : 'open')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              statusFilter === 'open'
+                ? 'bg-primary text-cream shadow-warm-sm'
+                : 'bg-white text-charcoal hover:bg-cream-surface border border-cream-border'
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                statusFilter === 'open' ? 'bg-emerald-300' : 'bg-emerald-500'
+              }`}
+            />
+            <span>Open Now</span>
+          </button>
         </div>
 
-        {/* Active Filters Summary (if any applied) */}
-        {(selectedCategory !== 'all' || searchQuery) && (
+        {/* Active Filters Summary */}
+        {hasActiveFilters && (
           <div className="flex items-center flex-wrap gap-2 pt-1 text-xs text-charcoal-muted">
             <span className="font-semibold text-charcoal">Active filters:</span>
-            {selectedCategory !== 'all' && (
+            {statusFilter === 'open' && (
               <span className="inline-flex items-center gap-1 bg-white border border-cream-border px-2.5 py-1 rounded-full">
-                <span>{activeCategoryObj?.name || selectedCategory}</span>
+                <span>Open Now</span>
                 <button
                   type="button"
-                  onClick={() => handleCategorySelect('all')}
+                  onClick={() => handleStatusSelect('all')}
                   className="hover:text-terracotta cursor-pointer"
-                  aria-label="Remove category filter"
+                  aria-label="Remove open status filter"
                 >
                   <X size={12} />
                 </button>
@@ -295,35 +293,72 @@ export const RestaurantListingPage: React.FC = () => {
         )}
       </div>
 
-      {/* Kitchens Grid or Empty State */}
-      {filteredRestaurants.length > 0 ? (
+      {/* Loading, Error, Empty, or Kitchens Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-2xl border border-cream-border overflow-hidden shadow-warm-sm animate-pulse"
+            >
+              <div className="aspect-[16/10] bg-cream-border/40" />
+              <div className="p-4 space-y-2.5">
+                <div className="h-5 bg-cream-border/40 rounded w-2/3" />
+                <div className="h-3.5 bg-cream-border/30 rounded w-full" />
+                <div className="h-3 bg-cream-border/25 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="bg-white rounded-2xl border border-rose-200 p-12 text-center max-w-md mx-auto my-12 shadow-warm-sm space-y-4">
+          <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-700 mx-auto flex items-center justify-center">
+            <AlertCircle size={24} />
+          </div>
+          <h2 className="font-serif text-2xl font-bold text-charcoal">Unable to load kitchens</h2>
+          <p className="text-sm text-charcoal-muted leading-relaxed">
+            {error?.message || 'We could not connect to the restaurant service. Please try again.'}
+          </p>
+          <div className="pt-2">
+            <Button
+              variant="primary"
+              onClick={() => void refetch()}
+              leftIcon={<RefreshCw size={15} />}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      ) : filteredRestaurants.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
           {filteredRestaurants.map((restaurant) => (
             <RestaurantCard
               key={restaurant.id}
               restaurant={restaurant}
-              isFavorite={favoriteRestaurantIds.includes(restaurant.id)}
-              onToggleFavorite={() => toggleFavorite(restaurant.id)}
-              onQuickAdd={(dish, rest) => addToCart(dish, rest)}
+              isFavorite={favoriteRestaurantIds.includes(String(restaurant.id))}
+              onToggleFavorite={() => toggleFavorite(restaurant.id, restaurant.name)}
               onSelect={() => navigate(`/restaurants/${restaurant.id}`)}
             />
           ))}
         </div>
       ) : (
-        /* Empty State */
         <div className="bg-white rounded-2xl border border-cream-border p-12 text-center max-w-md mx-auto my-12 shadow-warm-sm space-y-4">
           <div className="w-14 h-14 rounded-full bg-primary-surface text-primary mx-auto flex items-center justify-center">
             <Search size={24} />
           </div>
           <h2 className="font-serif text-2xl font-bold text-charcoal">No kitchens found</h2>
           <p className="text-sm text-charcoal-muted leading-relaxed">
-            We couldn't find any partner kitchens matching your current filters. Try resetting the filters or searching for something else.
+            {hasActiveFilters
+              ? "We couldn't find any partner kitchens matching your current filters. Try resetting the filters or searching for something else."
+              : 'No partner kitchens are currently registered.'}
           </p>
-          <div className="pt-2">
-            <Button variant="primary" onClick={handleResetFilters}>
-              Reset all filters
-            </Button>
-          </div>
+          {hasActiveFilters && (
+            <div className="pt-2">
+              <Button variant="primary" onClick={handleResetFilters}>
+                Reset all filters
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

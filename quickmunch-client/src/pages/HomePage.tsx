@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { RESTAURANTS, CATEGORIES } from '../data/mockData';
+import { useRestaurantsQuery } from '../hooks/queries/useRestaurantQueries';
 import { HeroSection } from '../components/sections/HeroSection';
-import { CategoryNav } from '../components/sections/CategoryNav';
 import { RestaurantGrid } from '../components/sections/RestaurantGrid';
 import { PopularDishes } from '../components/sections/PopularDishes';
 import { PromoBanner } from '../components/sections/PromoBanner';
@@ -14,24 +13,29 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { addToCart, favoriteRestaurantIds, toggleFavorite } = useCart();
 
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const {
+    data: restaurants = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useRestaurantsQuery();
+
+  const [openOnly, setOpenOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('curated');
+  const [sortBy, setSortBy] = useState<SortOption>('default');
 
-  // Filter restaurants on homepage
+  const activeRestaurants = useMemo(
+    () => restaurants.filter((r) => r.isActive !== false),
+    [restaurants],
+  );
+
+  // Filter and sort backend restaurants
   const filteredRestaurants = useMemo(() => {
-    let list = [...RESTAURANTS];
+    let list = [...activeRestaurants];
 
-    if (selectedCategory !== 'all') {
-      const catObj = CATEGORIES.find((c) => c.id === selectedCategory);
-      if (catObj) {
-        list = list.filter(
-          (r) =>
-            r.cuisine.toLowerCase() === catObj.name.toLowerCase() ||
-            r.cuisine.toLowerCase().includes(selectedCategory) ||
-            r.dietaryTags.some((t) => t.toLowerCase().includes(selectedCategory))
-        );
-      }
+    if (openOnly) {
+      list = list.filter((r) => r.isOpen);
     }
 
     if (searchQuery.trim()) {
@@ -39,61 +43,46 @@ export const HomePage: React.FC = () => {
       list = list.filter(
         (r) =>
           r.name.toLowerCase().includes(query) ||
-          r.cuisine.toLowerCase().includes(query) ||
-          r.neighborhood.toLowerCase().includes(query) ||
-          r.tagline.toLowerCase().includes(query) ||
-          r.dishes.some(
-            (d) =>
-              d.name.toLowerCase().includes(query) ||
-              d.description.toLowerCase().includes(query)
-          )
+          r.address.toLowerCase().includes(query) ||
+          (r.description && r.description.toLowerCase().includes(query)),
       );
     }
 
-    if (sortBy === 'rating') {
-      list.sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === 'prepTime') {
-      list.sort((a, b) => parseInt(a.prepTime) - parseInt(b.prepTime));
+    if (sortBy === 'open') {
+      list.sort((a, b) => Number(b.isOpen) - Number(a.isOpen));
+    } else if (sortBy === 'name') {
+      list.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     return list;
-  }, [selectedCategory, searchQuery, sortBy]);
-
-  const selectedCategoryName = CATEGORIES.find((c) => c.id === selectedCategory)?.name;
+  }, [activeRestaurants, openOnly, searchQuery, sortBy]);
 
   return (
     <div>
-      {/* Hero Section */}
+      {/* Hero Section (Curated Showcase) */}
       <HeroSection
         onExploreClick={() => navigate('/restaurants')}
-        onSelectDetailKitchen={() => navigate('/restaurants/osteria-alba')}
+        onShowcaseClick={() => navigate('/restaurants')}
       />
 
-      {/* Category Nav */}
-      <CategoryNav
-        categories={CATEGORIES}
-        selectedCategory={selectedCategory}
-        onSelectCategory={(catId) => {
-          setSelectedCategory(catId);
-        }}
-      />
-
-      {/* Featured Artisan Kitchens */}
+      {/* Partner Kitchens from Backend */}
       <section id="kitchens" className="relative">
         <RestaurantGrid
           restaurants={filteredRestaurants}
+          isLoading={isLoading}
+          isError={isError}
+          errorMessage={error?.message}
+          onRetry={() => void refetch()}
           favoriteIds={favoriteRestaurantIds}
-          onToggleFavorite={toggleFavorite}
-          selectedCategory={selectedCategory}
-          categoryName={selectedCategoryName}
-          onClearCategory={() => setSelectedCategory('all')}
+          onToggleFavorite={(restaurant) => toggleFavorite(restaurant.id, restaurant.name)}
+          openOnly={openOnly}
+          onToggleOpenOnly={() => setOpenOnly((prev) => !prev)}
           searchQuery={searchQuery}
           sortBy={sortBy}
           onSortChange={setSortBy}
           onSelectRestaurant={(restaurant) => navigate(`/restaurants/${restaurant.id}`)}
-          onQuickAdd={addToCart}
           onResetFilters={() => {
-            setSelectedCategory('all');
+            setOpenOnly(false);
             setSearchQuery('');
           }}
         />
@@ -105,15 +94,23 @@ export const HomePage: React.FC = () => {
             onClick={() => navigate('/restaurants')}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white hover:bg-cream-surface border border-cream-border text-sm font-semibold text-charcoal shadow-warm-sm hover:shadow-warm transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <span>Explore all {RESTAURANTS.length} artisan kitchens</span>
+            <span>
+              {activeRestaurants.length > 0
+                ? `Explore all ${activeRestaurants.length} artisan kitchens`
+                : 'Explore all artisan kitchens'}
+            </span>
             <ArrowRight size={16} className="text-terracotta group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </section>
 
-      {/* Popular Dishes */}
+      {/* Featured Dishes from Backend */}
       <section id="dishes">
-        <PopularDishes onAddToCart={addToCart} />
+        <PopularDishes
+          restaurants={activeRestaurants}
+          isLoadingRestaurants={isLoading}
+          onAddToCart={addToCart}
+        />
       </section>
 
       {/* Direct Courier Promo */}

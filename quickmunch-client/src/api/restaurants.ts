@@ -25,6 +25,15 @@ const s3UploadClient = axios.create({
 
 export const restaurantsApi = {
   /**
+   * Fetches all public restaurants from restaurant-service via API Gateway
+   * Endpoint: GET /api/restaurants
+   */
+  getAllRestaurants: async (): Promise<RestaurantResponse[]> => {
+    const response = await apiClient.get<RestaurantResponse[]>(API_ENDPOINTS.RESTAURANTS.BASE);
+    return response.data;
+  },
+
+  /**
    * Fetches the current authenticated owner's restaurants
    * Endpoint: GET /api/restaurants/my
    */

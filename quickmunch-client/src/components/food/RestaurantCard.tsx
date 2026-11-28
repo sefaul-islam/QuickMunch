@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Heart } from 'lucide-react';
+import { Heart, MapPin, Phone } from 'lucide-react';
 import { motion } from 'motion/react';
-import type { Restaurant } from '../../types';
+import type { RestaurantResponse } from '../../api/types/restaurant';
 import { useImageFade } from '../../hooks/useImageFade';
-import { onRestaurantImgError } from '../../lib/imageUtils';
+import { resolveImageUrl, onRestaurantImgError } from '../../lib/imageUtils';
 
 export interface RestaurantCardProps {
-  restaurant: Restaurant;
+  restaurant: RestaurantResponse;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
-  onSelect?: (restaurant: Restaurant) => void;
-  onQuickAdd?: (dish: Restaurant['dishes'][0], restaurant: Restaurant) => void;
+  onSelect?: (restaurant: RestaurantResponse) => void;
 }
 
 export const RestaurantCard: React.FC<RestaurantCardProps> = ({
@@ -24,6 +23,8 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   const [internalFavorite, setInternalFavorite] = useState(false);
   const isFavorite = controlledFavorite !== undefined ? controlledFavorite : internalFavorite;
   const coverFade = useImageFade('duration-500');
+
+  const resolvedCover = resolveImageUrl(restaurant.imageUrl);
 
   const handleClick = () => {
     if (onSelect) {
@@ -46,7 +47,7 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
     <motion.article
       tabIndex={0}
       role="button"
-      aria-label={`View menu for ${restaurant.name}, ${restaurant.cuisine} cuisine, rated ${restaurant.rating}`}
+      aria-label={`View menu for ${restaurant.name}${restaurant.isOpen ? ', currently open' : ', currently closed'}`}
       whileHover={{ y: -3 }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
       onClick={handleClick}
@@ -61,13 +62,29 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
       {/* Clean Cover Media Frame */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-cream-dark">
         <img
-          src={restaurant.image}
+          src={resolvedCover}
           alt={restaurant.name}
           loading="lazy"
           className={`h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-104 ${coverFade.imgClassName}`}
           onLoad={coverFade.onLoad}
           onError={onRestaurantImgError}
         />
+
+        {/* Open / Closed Status Pill */}
+        <span
+          className={`absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-md shadow-warm-sm ${
+            restaurant.isOpen
+              ? 'bg-emerald-600/90 text-white'
+              : 'bg-charcoal/80 text-cream'
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              restaurant.isOpen ? 'bg-white animate-pulse' : 'bg-charcoal-faint'
+            }`}
+          />
+          {restaurant.isOpen ? 'Open Now' : 'Closed'}
+        </span>
 
         {/* Favorite Button */}
         <motion.button
@@ -90,37 +107,31 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
         </motion.button>
       </div>
 
-      {/* Clean Content Block: Name, Rating, Meta, Delivery */}
-      <div className="p-4 flex flex-col flex-1 justify-between gap-1.5">
-        <div className="flex items-start justify-between gap-2">
+      {/* Content Block: Name, Description, Address, Phone */}
+      <div className="p-4 flex flex-col flex-1 justify-between gap-2">
+        <div className="space-y-1">
           <h3 className="font-serif text-lg font-bold text-charcoal group-hover:text-primary transition-colors leading-snug">
             {restaurant.name}
           </h3>
 
-          {/* Rating */}
-          <div className="flex items-center gap-1 text-xs font-semibold text-charcoal shrink-0">
-            <Star size={13} className="text-terracotta fill-terracotta" />
-            <span className="tabular-nums">{restaurant.rating.toFixed(1)}</span>
-          </div>
+          {restaurant.description && (
+            <p className="text-xs text-charcoal-muted line-clamp-2 leading-relaxed">
+              {restaurant.description}
+            </p>
+          )}
         </div>
 
-        {/* Cuisine, Neighborhood & Prep Time */}
-        <p className="text-xs text-charcoal-muted line-clamp-1">
-          {restaurant.cuisine} • {restaurant.neighborhood} • {restaurant.prepTime}
-        </p>
-
-        {/* Delivery Fee & Free Delivery Threshold */}
-        <div className="flex items-center justify-between text-[11px] text-charcoal-muted pt-1 border-t border-cream-border/50">
-          <span>
-            {restaurant.deliveryFee === 0 ? (
-              <strong className="text-primary font-semibold">Free Delivery</strong>
-            ) : (
-              `$${restaurant.deliveryFee.toFixed(2)} delivery`
-            )}
-          </span>
-          <span className="font-medium text-charcoal/70">
-            {restaurant.priceRange}
-          </span>
+        <div className="space-y-1 text-[11px] text-charcoal-muted pt-2 border-t border-cream-border/50">
+          <div className="flex items-center gap-1.5 truncate">
+            <MapPin size={12} className="text-primary shrink-0" />
+            <span className="truncate">{restaurant.address}</span>
+          </div>
+          {restaurant.phoneNumber && (
+            <div className="flex items-center gap-1.5 truncate">
+              <Phone size={12} className="text-terracotta shrink-0" />
+              <span className="truncate">{restaurant.phoneNumber}</span>
+            </div>
+          )}
         </div>
       </div>
     </motion.article>

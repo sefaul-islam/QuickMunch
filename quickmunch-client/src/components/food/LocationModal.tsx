@@ -9,7 +9,7 @@ export interface LocationModalProps {
   isOpen: boolean;
   onClose: () => void;
   addresses: DeliveryAddress[];
-  currentAddress: DeliveryAddress;
+  currentAddress: DeliveryAddress | null;
   onSelectAddress: (address: DeliveryAddress) => void;
 }
 
@@ -20,18 +20,18 @@ export const LocationModal: React.FC<LocationModalProps> = ({
   currentAddress,
   onSelectAddress,
 }) => {
-  const [selectedId, setSelectedId] = useState(currentAddress.id);
+  const [selectedId, setSelectedId] = useState(currentAddress?.id ?? addresses[0]?.id ?? '');
   const [customStreet, setCustomStreet] = useState('');
   const [customNeighborhood, setCustomNeighborhood] = useState('');
-  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isAddingNew, setIsAddingNew] = useState(addresses.length === 0);
 
   const handleConfirm = () => {
-    if (isAddingNew && customStreet.trim()) {
+    if ((isAddingNew || addresses.length === 0) && customStreet.trim()) {
       const newAddress: DeliveryAddress = {
         id: `custom-${Date.now()}`,
-        label: 'Custom Address',
+        label: 'Delivery Address',
         street: customStreet.trim(),
-        neighborhood: customNeighborhood.trim() || 'New York, NY',
+        neighborhood: customNeighborhood.trim() || customStreet.trim(),
       };
       onSelectAddress(newAddress);
       setIsAddingNew(false);
